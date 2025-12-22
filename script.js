@@ -170,6 +170,7 @@ class PracticeSession {
         this.onAbort = onAbort;
 
         this.startTime = null;
+        this.elapsedBeforePause = 0;
         this.animationFrame = null;
 
         this.overlay = document.getElementById('exit-overlay');
@@ -188,9 +189,12 @@ class PracticeSession {
         this.animationFrame = requestAnimationFrame(() => this.run());
     }
 
-    handleInput() {
+    handleInput(e) {
+        // If click is on the overlay, ignore it so bubbles don't end session
+        if (e && e.target.closest('#exit-overlay')) return;
+
         if (this.active) {
-            this.finish();
+            this.pause();
         }
     }
 
@@ -204,46 +208,18 @@ class PracticeSession {
     }
 
     pause() {
+        if (!this.active) return;
         this.active = false;
         cancelAnimationFrame(this.animationFrame);
+        this.elapsedBeforePause = Date.now() - this.startTime;
         this.overlay.classList.remove('hidden');
-        document.exitPointerLock && document.exitPointerLock(); // Just in case
+        document.exitPointerLock && document.exitPointerLock();
     }
 
     resume() {
         this.overlay.classList.add('hidden');
-        // Recalculate start time to account for pause? 
-        // Philosophy: "Uninterrupted minutes". 
-        // Strict interpretation: Pausing is breaking focus. 
-        // User Requirement: "Breaking focus early: Session does not count"
-        // Therefore, "Resume" might technically not be allowed in a STRICTEST sense, 
-        // but for usability, if they accidentally hit Escape, we might allow a resume 
-        // if it was just a few seconds. 
-        // HOWEVER, the text says "Escape requires confirmation (to prevent casual exit)".
-        // It implies the session continues if they say "No, don't exit".
-
-        // I will allow resume, but NOT adjust the start time (penalizing the time spent in menu? 
-        // Actually, if we want fixed duration, we should strictly track elapsed time. 
-        // If they sit in the menu, that's not practice. 
-        // Simplest valid approach: Resume simply continues the timer check. 
-        // Better strict approach: If they pause, the session is tainted?
-        // Let's stick to simple: Resume hides menu, timer checks absolute diff.
-        // If they spent 1 minute in menu, that minute counts towards "duration" but they weren't focusing.
-        // This is a flaw. 
-        // BETTER: Adjust startTime so they still have to do the full Remaining time.
-
-        // Let's just restart the loop properly.
-        this.startTime = Date.now() - ((this.duration - this.remaining) * 1000); // this is complex.
-
-        // Easier: Just don't stop the timer. The timer is "elapsed wall clock time". 
-        // If you are in the menu, you are wasting session time. 
-        // But since we want "10 uninterrupted minutes", maybe we should fail them?
-        // Let's keep it simple: Pause just shows overlay. Timer continues in background? 
-        // No, that cheats.
-        // Let's effectively PAUSE the timer logic so they have to fulfill the full quantity of seconds on the dot.
-        const elapsedSoFar = (Date.now() - this.startTime);
-        this.startTime = Date.now() - elapsedSoFar;
-
+        // Restore the timer to the exact point it was paused
+        this.startTime = Date.now() - this.elapsedBeforePause;
         this.active = true;
         this.enterImmersiveMode();
         this.run();
@@ -274,7 +250,7 @@ class PracticeSession {
             }
         });
 
-        this.inputHandler = () => this.handleInput();
+        this.inputHandler = (e) => this.handleInput(e);
         document.getElementById('view-practice').addEventListener('click', this.inputHandler);
 
         window.onbeforeunload = () => {
@@ -348,6 +324,10 @@ class App {
         // Overlay Controls
         document.getElementById('btn-resume').addEventListener('click', () => {
             if (this.currentSession) this.currentSession.resume();
+        });
+
+        document.getElementById('btn-finish').addEventListener('click', () => {
+            if (this.currentSession) this.currentSession.finish();
         });
 
         document.getElementById('btn-abort').addEventListener('click', () => {
