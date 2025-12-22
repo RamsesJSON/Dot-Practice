@@ -202,6 +202,7 @@ class PracticeSession {
         this.active = false;
         cancelAnimationFrame(this.animationFrame);
         const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        this.overlay.classList.add('hidden');
         this.exitImmersiveMode();
         this.onComplete(elapsed);
         this.removeInputHandler();
@@ -228,6 +229,7 @@ class PracticeSession {
     abort() {
         this.active = false;
         cancelAnimationFrame(this.animationFrame);
+        this.overlay.classList.add('hidden');
         this.exitImmersiveMode();
         this.onAbort();
     }
