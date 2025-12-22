@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Practice</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@300&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <div id="app">
+        <!-- View: Splash / Intro -->
+        <section id="view-intro" class="view active">
+            <div class="center-content text-left intro-manifesto">
+                <h1 class="fade-in">DOT MEDITATION</h1>
+                <h2 class="fade-in delay-1" style="font-size: 1rem; margin-top: 0.5rem; opacity: 0.7;">Building
+                    Attention Capacity</h2>
+
+                <div class="philosophy-text fade-in delay-2">
+                    <p>An age of perpetual distraction, it serves as a powerful anchor, systematically simplifying focus
+                        to a single point and then expanding it through increasingly complex geometric forms.</p>
+                    <p>This meditation directly confronts the modern deficit of attention by retraining the mind through
+                        the absolute discipline of the gaze.</p>
+                    <p>Before meditating on any sigils, preliminary training of ATTENTION is necessary. This attention
+                        then evolves into awareness.</p>
+                    <p>The practice is built on the principle that where the eyes are, the mind is; by commanding the
+                        eyes to remain fixed on a single, unmoving object, you force the scattered mind to follow,
+                        compelling it into a state of unwavering presence.</p>
+                    <p>This is not a gentle exercise but a decisive tool for reclaiming cognitive sovereignty, forging
+                        the mind into a sharp, singular instrument capable of piercing through the noise and unlocking
+                        the power of undivided attention.</p>
+                </div>
+
+                <button id="btn-enter" class="btn-ghost fade-in delay-3">ENTER TRAINING</button>
+
+                <div class="credit-footer fade-in delay-3" style="margin-top: 4rem;">
+                    Source: <a href="https://templeofzeus.org/Dot_Meditation.php" target="_blank"
+                        class="credit-link">Temple of Zeus</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Dashboard -->
+        <section id="view-dashboard" class="view hidden">
+            <header class="dashboard-header">
+                <div class="stats-container">
+                    <div class="stat-item">
+                        <span class="stat-label">TOTAL TIME</span>
+                        <span class="stat-value" id="total-time-display">00h 00m</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">LAST SESSION</span>
+                        <span class="stat-value" id="last-session-display">--</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="levels-grid">
+                <!-- Level 1 -->
+                <div class="level-card" data-level="1">
+                    <span class="level-number-tag">LEVEL 1</span>
+                    <div class="level-icon level-dot"></div>
+                    <div class="level-info">
+                        <h3>THE DOT</h3>
+                        <p class="level-time">Sessions: 0 | Total: 0m</p>
+                    </div>
+                </div>
+
+                <!-- Level 2 -->
+                <div class="level-card" data-level="2">
+                    <span class="level-number-tag">LEVEL 2</span>
+                    <div class="level-icon level-circle"></div>
+                    <div class="level-info">
+                        <h3>THE CIRCLE</h3>
+                        <p class="level-time">Sessions: 0 | Total: 0m</p>
+                    </div>
+                </div>
+
+                <!-- Level 3 -->
+                <div class="level-card" data-level="3">
+                    <span class="level-number-tag">LEVEL 3</span>
+                    <div class="level-icon level-square"></div>
+                    <div class="level-info">
+                        <h3>THE SQUARE</h3>
+                        <p class="level-time">Sessions: 0 | Total: 0m</p>
+                    </div>
+                </div>
+
+                <!-- Level 4 -->
+                <div class="level-card" data-level="4">
+                    <span class="level-number-tag">LEVEL 4</span>
+                    <div class="level-icon level-triangle"></div>
+                    <div class="level-info">
+                        <h3>THE TRIANGLE</h3>
+                        <p class="level-time">Sessions: 0 | Total: 0m</p>
+                    </div>
+                </div>
+
+                <!-- Level 5 -->
+                <div class="level-card" data-level="5">
+                    <span class="level-number-tag">LEVEL 5</span>
+                    <div class="level-icon level-sigil"></div>
+                    <div class="level-info">
+                        <h3>THE SIGIL</h3>
+                        <p class="level-time">Sessions: 0 | Total: 0m</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Session Logs Section -->
+            <div class="sessions-log-container">
+                <h3 class="log-header">SESSION LOGS</h3>
+                <div id="log-list" class="log-list">
+                    <!-- Logs injected here -->
+                    <p style="text-align: center; opacity: 0.5;">No sessions recorded yet.</p>
+                </div>
+            </div>
+
+            <div class="credit-footer" style="margin: 4rem auto; text-align: center;">
+                Guidance by <a href="https://templeofzeus.org/Dot_Meditation.php" target="_blank"
+                    class="credit-link">Temple of Zeus</a>
+            </div>
+        </section>
+
+        <!-- View: Pre-Practice Instructions -->
+        <section id="view-instruction" class="view hidden">
+            <div class="center-content text-left">
+                <h2 id="instruction-title">LEVEL I</h2>
+                <div class="instruction-text">
+                    <p id="instruction-p1"></p>
+                    <p id="instruction-p2"></p>
+                    <p id="instruction-p3"></p>
+
+                    <div id="mastery-info" class="mastery-note hidden">
+                        <h4>ON MASTERY</h4>
+                        <p>You will experience unwavering attention, without effort, an empty mind and you will be very
+                            easy to maintain attention. You will not experience disarray, wanting to “get up and do
+                            something” or mental distractions. You have reached maximum level in this when borderline
+                            zero resistance occurs from your mind.</p>
+                    </div>
+
+                    <p class="warning" style="margin-top: 2rem;">DURATION: <span id="instruction-duration">2
+                            MINUTES</span></p>
+                    <p class="warning-sub">TAP SCREEN TO END SESSION.</p>
+
+                    <!-- Level 5 Specific Upload -->
+                    <div id="sigil-upload-view" class="sigil-upload-container hidden">
+                        <p>A practice of yours requires a sigil.</p>
+                        <img id="sigil-preview" class="sigil-preview-mini">
+                        <label for="sigil-input" class="file-label">SELECT SIGIL IMAGE</label>
+                        <input type="file" id="sigil-input" accept="image/*">
+                    </div>
+                </div>
+                <button id="btn-begin-practice" class="btn-solid">BEGIN PRACTICE</button>
+                <button id="btn-back-dashboard" class="btn-text">RETURN</button>
+
+                <div class="credit-footer" style="margin-top: 3rem;">
+                    Origin: <a href="https://templeofzeus.org/Dot_Meditation.php" target="_blank"
+                        class="credit-link">Temple
+                        of Zeus</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Active Practice -->
+        <section id="view-practice" class="view hidden">
+            <!-- The Geometry Container -->
+            <div id="practice-stage">
+                <!-- Shapes will be injected here -->
+                <div id="shape-container"></div>
+            </div>
+
+            <!-- Hidden Overlay for Escape Confirmation -->
+            <div id="exit-overlay" class="hidden">
+                <div class="modal">
+                    <h3>BREAK FOCUS?</h3>
+                    <p>The session will not count.</p>
+                    <div class="modal-actions">
+                        <button id="btn-resume">RESUME</button>
+                        <button id="btn-abort">ABORT</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- View: Debrief / Mastery Check -->
+        <section id="view-debrief" class="view hidden">
+            <div class="center-content">
+                <h2>SESSION COMPLETE</h2>
+
+                <div class="session-summary">
+                    <div class="summary-row">
+                        <span class="summary-label">SESSION TIME</span>
+                        <span class="summary-value" id="session-time-val">00:00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">CUMULATIVE (LEVEL)</span>
+                        <span class="summary-value" id="cumulative-time-val">00m</span>
+                    </div>
+                </div>
+
+                <div id="mastery-check" class="hidden">
+                    <div class="mastery-prompt">
+                        <p>Have you stabilized your attention?</p>
+                        <p class="sub-prompt">Answer truthfully. Progress depends on honesty.</p>
+                        <button id="btn-claim-mastery" class="btn-gold">I HAVE MASTERED THIS FORM</button>
+                        <button id="btn-continue-training" class="btn-ghost">CONTINUE TRAINING</button>
+                    </div>
+                </div>
+
+                <div id="normal-debrief">
+                    <button id="btn-return-home" class="btn-ghost">RETURN</button>
+                </div>
+
+                <div class="credit-footer" style="margin-top: 4rem; text-align: center;">
+                    Training by <a href="https://templeofzeus.org/Dot_Meditation.php" target="_blank"
+                        class="credit-link">Temple of Zeus</a>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
