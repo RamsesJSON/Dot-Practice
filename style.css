@@ -132,6 +132,12 @@ button {
     background: #a30000;
 }
 
+.btn-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.65rem;
+    margin-top: 0;
+}
+
 .credit-link {
     color: var(--gold);
     text-decoration: none;
@@ -280,6 +286,15 @@ button {
     padding: 0 2rem;
 }
 
+.data-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    max-width: 1000px;
+    margin: 1rem auto 0 auto;
+    padding: 0 2rem;
+}
+
 .stat-item {
     display: flex;
     flex-direction: column;
@@ -381,6 +396,52 @@ button {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+}
+
+.manual-adjust {
+    position: absolute;
+    bottom: 1rem;
+    right: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s var(--ease-out);
+}
+
+.level-card:hover .manual-adjust {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.btn-adjust {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid var(--accent-dim);
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    border-radius: 4px;
+}
+
+.btn-adjust:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-minus:hover {
+    color: #ff4444;
+    border-color: #ff4444;
+}
+
+.btn-plus:hover {
+    color: #44ff44;
+    border-color: #44ff44;
 }
 
 .level-number-tag {

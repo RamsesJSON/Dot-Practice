@@ -120,6 +120,55 @@ class StorageManager {
         this.save();
     }
 
+    adjustTime(levelId, minutes) {
+        const seconds = minutes * 60;
+        if (!this.state.levelData[levelId].history) {
+            this.state.levelData[levelId].history = [];
+        }
+
+        // Don't allow negative total time for level
+        if (this.state.levelData[levelId].time + seconds < 0) {
+            return false;
+        }
+
+        this.state.levelData[levelId].history.push({
+            date: new Date().toISOString(),
+            duration: seconds,
+            manual: true
+        });
+
+        this.state.levelData[levelId].time += seconds;
+        this.state.totalTime += seconds;
+        this.save();
+        return true;
+    }
+
+    exportData() {
+        const dataStr = JSON.stringify(this.state, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        const exportFileDefaultName = `dot_practice_export_${new Date().toISOString().split('T')[0]}.json`;
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    }
+
+    importData(jsonData) {
+        try {
+            const parsed = JSON.parse(jsonData);
+            // Basic validation: check if it has the expected structure
+            if (parsed && typeof parsed.totalTime === 'number' && parsed.levelData) {
+                this.state = parsed;
+                this.save();
+                return true;
+            }
+        } catch (e) {
+            console.error("Import failed", e);
+        }
+        return false;
+    }
+
     markMastery(levelId) {
         if (this.state.levelData[levelId]) {
             this.state.levelData[levelId].mastered = true;
@@ -351,6 +400,47 @@ class App {
         document.getElementById('btn-return-home').addEventListener('click', () => {
             this.view.show('dashboard');
         });
+
+        // Manual Adjustment Buttons
+        document.querySelectorAll('.btn-adjust').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent level card click
+                const levelId = parseInt(btn.dataset.level);
+                const isPlus = btn.classList.contains('btn-plus');
+                const minutes = isPlus ? 1 : -1;
+
+                if (this.store.adjustTime(levelId, minutes)) {
+                    this.renderDashboard();
+                }
+            });
+        });
+
+        // Data Management
+        document.getElementById('btn-export').addEventListener('click', () => {
+            this.store.exportData();
+        });
+
+        const importInput = document.getElementById('import-input');
+        document.getElementById('btn-import').addEventListener('click', () => {
+            importInput.click();
+        });
+
+        importInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (this.store.importData(event.target.result)) {
+                        this.renderDashboard();
+                        alert("Data imported successfully.");
+                    } else {
+                        alert("Failed to import data. Invalid format.");
+                    }
+                    importInput.value = ''; // Reset for next time
+                };
+                reader.readAsText(file);
+            }
+        });
     }
 
     updateSigilPreview() {
@@ -471,7 +561,8 @@ class App {
                 allSessions.push({
                     levelName: LEVELS[lid].name.toUpperCase(),
                     date: new Date(session.date),
-                    duration: session.duration
+                    duration: session.duration,
+                    manual: session.manual
                 });
             });
 
@@ -512,7 +603,7 @@ class App {
                 };
 
                 entry.innerHTML = `
-                    <span class="log-level">${session.levelName}</span>
+                    <span class="log-level">${session.levelName} ${session.manual ? '<span style="font-size: 0.6rem; opacity: 0.5;">(MANUAL)</span>' : ''}</span>
                     <div class="log-meta">
                         <span class="log-date">${timeStr}</span>
                         <span class="log-duration">${formatDuration(session.duration)}</span>
