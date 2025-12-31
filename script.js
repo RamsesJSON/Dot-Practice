@@ -645,7 +645,7 @@ class App {
         const dot = document.createElementNS(ns, "circle");
         dot.setAttribute("cx", center);
         dot.setAttribute("cy", center);
-        dot.setAttribute("r", levelId === 1 ? size * 0.05 : size * 0.015);
+        dot.setAttribute("r", levelId === 1 ? size * 0.02 : size * 0.02);
         dot.setAttribute("fill", color);
 
         let form = null;
@@ -692,3 +692,4 @@ class App {
 window.addEventListener('DOMContentLoaded', () => {
     window.app = new App();
 });
+
