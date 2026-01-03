@@ -82,7 +82,8 @@ class StorageManager {
                 4: { time: 0, mastered: false, history: [] },
                 5: { time: 0, mastered: false, history: [] }
             },
-            sigilImage: null
+            sigilImage: null,
+            theme: 'dark'
         };
     }
 
@@ -131,11 +132,14 @@ class StorageManager {
             return false;
         }
 
+        // User requested not to add sessions for manual adjustments
+        /*
         this.state.levelData[levelId].history.push({
             date: new Date().toISOString(),
             duration: seconds,
             manual: true
         });
+        */
 
         this.state.levelData[levelId].time += seconds;
         this.state.totalTime += seconds;
@@ -338,6 +342,53 @@ class App {
         this.bindEvents();
         this.renderDashboard();
         this.setupThemeToggle();
+        this.setupCustomTimeModal();
+    }
+
+    setupCustomTimeModal() {
+        this.customTimeOverlay = document.getElementById('custom-time-overlay');
+        this.customMinutesInput = document.getElementById('custom-minutes-input');
+        this.btnConfirm = document.getElementById('btn-custom-confirm');
+        this.btnCancel = document.getElementById('btn-custom-cancel');
+        this.pendingLevelId = null;
+
+        this.btnConfirm.addEventListener('click', () => {
+            const minutes = parseInt(this.customMinutesInput.value);
+            if (!isNaN(minutes) && this.pendingLevelId !== null) {
+                if (this.store.adjustTime(this.pendingLevelId, minutes)) {
+                    this.renderDashboard();
+                }
+            }
+            this.closeCustomTimeModal();
+        });
+
+        this.btnCancel.addEventListener('click', () => {
+            this.closeCustomTimeModal();
+        });
+
+        // Close on overlay click
+        this.customTimeOverlay.addEventListener('click', (e) => {
+            if (e.target === this.customTimeOverlay) this.closeCustomTimeModal();
+        });
+
+        // Handle Enter key
+        this.customMinutesInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.btnConfirm.click();
+            }
+        });
+    }
+
+    showCustomTimeModal(levelId) {
+        this.pendingLevelId = levelId;
+        this.customMinutesInput.value = '10';
+        this.customTimeOverlay.classList.remove('hidden');
+        setTimeout(() => this.customMinutesInput.focus(), 100);
+    }
+
+    closeCustomTimeModal() {
+        this.customTimeOverlay.classList.add('hidden');
+        this.pendingLevelId = null;
     }
 
     setupThemeToggle() {
@@ -346,27 +397,34 @@ class App {
 
         const sunIcon = btn.querySelector('.sun-icon');
         const moonIcon = btn.querySelector('.moon-icon');
-        let isDark = true;
 
-        btn.addEventListener('click', () => {
-            isDark = !isDark;
-            if (!isDark) {
-                // Switch to Light (Invert)
+        const applyTheme = (theme) => {
+            document.body.classList.toggle('light-theme', theme === 'light');
+            if (theme === 'light') {
                 if (!document.getElementById('__inv')) {
-                    document.body.insertAdjacentHTML(
-                        'afterbegin',
-                        '<div id="__inv" style="position:fixed;inset:0;pointer-events:none;backdrop-filter:invert(1) hue-rotate(180deg);z-index:2147483646"></div>'
+                    document.getElementById('app').insertAdjacentHTML(
+                        'beforeend',
+                        '<div id="__inv" style="position:absolute;inset:0;pointer-events:none;backdrop-filter:invert(1) hue-rotate(180deg);z-index:9999"></div>'
                     );
                 }
                 sunIcon.style.display = 'none';
                 moonIcon.style.display = 'block';
             } else {
-                // Switch to Dark (Remove Invert)
                 const inv = document.getElementById('__inv');
                 if (inv) inv.remove();
                 sunIcon.style.display = 'block';
                 moonIcon.style.display = 'none';
             }
+        };
+
+        // Initial apply
+        applyTheme(this.store.state.theme || 'dark');
+
+        btn.addEventListener('click', () => {
+            const currentTheme = this.store.state.theme === 'light' ? 'dark' : 'light';
+            this.store.state.theme = currentTheme;
+            this.store.save();
+            applyTheme(currentTheme);
         });
     }
 
@@ -449,8 +507,16 @@ class App {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation(); // Prevent level card click
                 const levelId = parseInt(btn.dataset.level);
-                const isPlus = btn.classList.contains('btn-plus');
-                const minutes = isPlus ? 1 : -1;
+                let minutes = 0;
+
+                if (btn.classList.contains('btn-plus')) {
+                    minutes = 1;
+                } else if (btn.classList.contains('btn-minus')) {
+                    minutes = -1;
+                } else if (btn.classList.contains('btn-custom')) {
+                    this.showCustomTimeModal(levelId);
+                    return; // Modal handles the rest
+                }
 
                 if (this.store.adjustTime(levelId, minutes)) {
                     this.renderDashboard();

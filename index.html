@@ -14,12 +14,13 @@
 </head>
 
 <body>
-    <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Theme">
-        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-    </button>
 
     <div id="app">
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Theme">
+            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+
         <!-- View: Splash / Intro -->
         <section id="view-intro" class="view active">
             <div class="center-content text-left intro-manifesto">
@@ -82,6 +83,7 @@
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="1">-</button>
+                        <button class="btn-adjust btn-custom" data-level="1">✎</button>
                         <button class="btn-adjust btn-plus" data-level="1">+</button>
                     </div>
                 </div>
@@ -96,6 +98,7 @@
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="2">-</button>
+                        <button class="btn-adjust btn-custom" data-level="2">✎</button>
                         <button class="btn-adjust btn-plus" data-level="2">+</button>
                     </div>
                 </div>
@@ -110,6 +113,7 @@
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="3">-</button>
+                        <button class="btn-adjust btn-custom" data-level="3">✎</button>
                         <button class="btn-adjust btn-plus" data-level="3">+</button>
                     </div>
                 </div>
@@ -124,6 +128,7 @@
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="4">-</button>
+                        <button class="btn-adjust btn-custom" data-level="4">✎</button>
                         <button class="btn-adjust btn-plus" data-level="4">+</button>
                     </div>
                 </div>
@@ -138,6 +143,7 @@
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="5">-</button>
+                        <button class="btn-adjust btn-custom" data-level="5">✎</button>
                         <button class="btn-adjust btn-plus" data-level="5">+</button>
                     </div>
                 </div>
@@ -188,7 +194,7 @@
                     </div>
                 </div>
                 <button id="btn-begin-practice" class="btn-solid">BEGIN PRACTICE</button>
-                <button id="btn-back-dashboard" class="btn-text">RETURN</button>
+                <button id="btn-back-dashboard" class="btn-red">RETURN</button>
 
                 <div class="credit-footer" style="margin-top: 3rem;">
                     Origin: <a href="https://templeofzeus.org/Dot_Meditation.php" target="_blank"
@@ -207,7 +213,7 @@
             </div>
 
             <!-- Hidden Overlay for Escape Confirmation -->
-            <div id="exit-overlay" class="hidden">
+            <div id="exit-overlay" class="overlay hidden">
                 <div class="modal">
                     <h3>PAUSE PRACTICE</h3>
                     <p>Have you finished your session or did you lose focus?</p>
@@ -246,7 +252,7 @@
                 </div>
 
                 <div id="normal-debrief">
-                    <button id="btn-return-home" class="btn-ghost">RETURN</button>
+                    <button id="btn-return-home" class="btn-red">RETURN</button>
                 </div>
 
                 <div class="credit-footer" style="margin-top: 4rem; text-align: center;">
@@ -255,6 +261,22 @@
                 </div>
             </div>
         </section>
+
+        <!-- Custom Time Modal -->
+        <div id="custom-time-overlay" class="overlay hidden">
+            <div class="modal">
+                <h3>ADJUST TIME</h3>
+                <p class="subtitle">Enter minutes to add or subtract</p>
+                <div class="custom-input-wrap">
+                    <input type="number" id="custom-minutes-input" placeholder="10" autofocus>
+                    <span class="input-unit">MIN</span>
+                </div>
+                <div class="modal-actions">
+                    <button id="btn-custom-confirm" class="btn-solid">CONFIRM</button>
+                    <button id="btn-custom-cancel" class="btn-ghost">CANCEL</button>
+                </div>
+            </div>
+        </div>
 
     </div>
 

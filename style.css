@@ -40,6 +40,7 @@ body {
     height: 100%;
     position: relative;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 /* --- Typography --- */
@@ -105,7 +106,7 @@ button {
     position: fixed;
     top: 2rem;
     right: 2rem;
-    z-index: 2147483647; 
+    z-index: 1000; 
     padding: 0.8rem;
     margin: 0;
     border-radius: 50%;
@@ -171,6 +172,22 @@ button {
 
 .btn-danger:hover {
     background: #a30000;
+}
+
+/* Constant Red Button (Stays red even when inverted) */
+.btn-red {
+    border: 1px solid #ff4444 !important;
+    color: #ff4444 !important;
+    font-weight: 600;
+}
+
+.btn-red:hover {
+    background: rgba(255, 68, 68, 0.1) !important;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.2);
+}
+
+.light-theme .btn-red {
+    filter: invert(1) hue-rotate(180deg);
 }
 
 .btn-small {
@@ -485,6 +502,11 @@ button {
     border-color: #44ff44;
 }
 
+.btn-custom:hover {
+    color: var(--gold);
+    border-color: var(--gold);
+}
+
 .level-number-tag {
     position: absolute;
     top: 1rem;
@@ -609,19 +631,51 @@ input[type="file"] {
 }
 
 /* Modals */
-#exit-overlay {
+.overlay {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
-    /* distinct from pure black practice */
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: default;
-    z-index: 100;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+#exit-overlay {
+    /* Inherits from .overlay */
+}
+
+.custom-input-wrap {
+    margin: 2rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    border-bottom: 1px solid var(--accent-dim);
+    padding-bottom: 0.5rem;
+}
+
+.custom-input-wrap input {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    width: 120px;
+    text-align: center;
+    outline: none;
+}
+
+.input-unit {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    letter-spacing: 0.1em;
 }
 
 .modal {
