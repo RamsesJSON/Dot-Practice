@@ -98,6 +98,47 @@ button {
 
 .btn-solid:hover {
     background: #fff;
+}
+
+/* --- Theme Toggle --- */
+.theme-toggle {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    z-index: 2147483647; 
+    padding: 0.8rem;
+    margin: 0;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--accent-dim);
+    background: var(--card-bg);
+    color: var(--text-primary);
+    transition: all 0.3s var(--ease-out), opacity 0.5s var(--ease-out);
+}
+
+.theme-toggle:hover {
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.theme-toggle svg {
+    transition: transform 0.5s var(--ease-out);
+}
+
+.theme-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Ensure the toggle button itself isn't inverted if we want it to stay consistent, 
+   but the user's logic inverts the whole body. 
+   Actually, the overlay is 'afterbegin' of body, so it covers everything. 
+   If we want the button to NOT be inverted, we'd need to put it outside the body or use a different trick.
+   But the user's logic is simple, so I'll stick to it. */
     transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
 }
@@ -664,5 +705,13 @@ input[type="file"] {
 
     .p-triangle .mid-dot {
         top: 45vmin;
+    }
+
+    .theme-toggle {
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        padding: 0.7rem;
     }
 }

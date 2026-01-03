@@ -187,9 +187,21 @@ class ViewManager {
             practice: document.getElementById('view-practice'),
             debrief: document.getElementById('view-debrief')
         };
+        this.themeToggle = document.getElementById('theme-toggle');
     }
 
     show(viewName) {
+        // Hide theme toggle during practice
+        if (this.themeToggle) {
+            if (viewName === 'practice') {
+                this.themeToggle.style.opacity = '0';
+                this.themeToggle.style.pointerEvents = 'none';
+            } else {
+                this.themeToggle.style.opacity = '1';
+                this.themeToggle.style.pointerEvents = 'auto';
+            }
+        }
+
         // Hide all
         Object.values(this.views).forEach(el => {
             el.classList.remove('active');
@@ -325,6 +337,37 @@ class App {
     init() {
         this.bindEvents();
         this.renderDashboard();
+        this.setupThemeToggle();
+    }
+
+    setupThemeToggle() {
+        const btn = document.getElementById('theme-toggle');
+        if (!btn) return;
+
+        const sunIcon = btn.querySelector('.sun-icon');
+        const moonIcon = btn.querySelector('.moon-icon');
+        let isDark = true;
+
+        btn.addEventListener('click', () => {
+            isDark = !isDark;
+            if (!isDark) {
+                // Switch to Light (Invert)
+                if (!document.getElementById('__inv')) {
+                    document.body.insertAdjacentHTML(
+                        'afterbegin',
+                        '<div id="__inv" style="position:fixed;inset:0;pointer-events:none;backdrop-filter:invert(1) hue-rotate(180deg);z-index:2147483646"></div>'
+                    );
+                }
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
+            } else {
+                // Switch to Dark (Remove Invert)
+                const inv = document.getElementById('__inv');
+                if (inv) inv.remove();
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
+            }
+        });
     }
 
     bindEvents() {
@@ -692,4 +735,3 @@ class App {
 window.addEventListener('DOMContentLoaded', () => {
     window.app = new App();
 });
-
