@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Practice</title>
+    <title>Dot Meditation</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,8 +17,23 @@
 
     <div id="app">
         <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Theme">
-            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                style="display: none;">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
         </button>
 
         <!-- View: Splash / Intro -->
@@ -76,10 +91,12 @@
                 <!-- Level 1 -->
                 <div class="level-card" data-level="1">
                     <span class="level-number-tag">LEVEL 1</span>
+                    <button class="btn-card-info" data-level="1" title="Goal Settings">ⓘ</button>
                     <div class="level-icon level-dot"></div>
                     <div class="level-info">
                         <h3>THE DOT</h3>
                         <p class="level-time">Sessions: 0 | Total: 0m</p>
+                        <p class="level-goal-status hidden" data-goal-status="1"></p>
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="1">-</button>
@@ -91,10 +108,12 @@
                 <!-- Level 2 -->
                 <div class="level-card" data-level="2">
                     <span class="level-number-tag">LEVEL 2</span>
+                    <button class="btn-card-info" data-level="2" title="Goal Settings">ⓘ</button>
                     <div class="level-icon level-circle"></div>
                     <div class="level-info">
                         <h3>THE CIRCLE</h3>
                         <p class="level-time">Sessions: 0 | Total: 0m</p>
+                        <p class="level-goal-status hidden" data-goal-status="2"></p>
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="2">-</button>
@@ -106,10 +125,12 @@
                 <!-- Level 3 -->
                 <div class="level-card" data-level="3">
                     <span class="level-number-tag">LEVEL 3</span>
+                    <button class="btn-card-info" data-level="3" title="Goal Settings">ⓘ</button>
                     <div class="level-icon level-square"></div>
                     <div class="level-info">
                         <h3>THE SQUARE</h3>
                         <p class="level-time">Sessions: 0 | Total: 0m</p>
+                        <p class="level-goal-status hidden" data-goal-status="3"></p>
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="3">-</button>
@@ -121,10 +142,12 @@
                 <!-- Level 4 -->
                 <div class="level-card" data-level="4">
                     <span class="level-number-tag">LEVEL 4</span>
+                    <button class="btn-card-info" data-level="4" title="Goal Settings">ⓘ</button>
                     <div class="level-icon level-triangle"></div>
                     <div class="level-info">
                         <h3>THE TRIANGLE</h3>
                         <p class="level-time">Sessions: 0 | Total: 0m</p>
+                        <p class="level-goal-status hidden" data-goal-status="4"></p>
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="4">-</button>
@@ -136,15 +159,34 @@
                 <!-- Level 5 -->
                 <div class="level-card" data-level="5">
                     <span class="level-number-tag">LEVEL 5</span>
+                    <button class="btn-card-info" data-level="5" title="Goal Settings">ⓘ</button>
                     <div class="level-icon level-sigil"></div>
                     <div class="level-info">
                         <h3>THE SIGIL</h3>
                         <p class="level-time">Sessions: 0 | Total: 0m</p>
+                        <p class="level-goal-status hidden" data-goal-status="5"></p>
                     </div>
                     <div class="manual-adjust">
                         <button class="btn-adjust btn-minus" data-level="5">-</button>
                         <button class="btn-adjust btn-custom" data-level="5">✎</button>
                         <button class="btn-adjust btn-plus" data-level="5">+</button>
+                    </div>
+                </div>
+
+                <!-- Level 6 -->
+                <div class="level-card" data-level="6">
+                    <span class="level-number-tag">LEVEL 6</span>
+                    <button class="btn-card-info" data-level="6" title="Goal Settings">ⓘ</button>
+                    <div class="level-icon level-custom"></div>
+                    <div class="level-info">
+                        <h3>CUSTOM</h3>
+                        <p class="level-time">Sessions: 0 | Total: 0m</p>
+                        <p class="level-goal-status hidden" data-goal-status="6"></p>
+                    </div>
+                    <div class="manual-adjust">
+                        <button class="btn-adjust btn-minus" data-level="6">-</button>
+                        <button class="btn-adjust btn-custom" data-level="6">✎</button>
+                        <button class="btn-adjust btn-plus" data-level="6">+</button>
                     </div>
                 </div>
             </div>
@@ -185,12 +227,60 @@
                             MINUTES</span></p>
                     <p class="warning-sub">TAP SCREEN TO END SESSION.</p>
 
+                    <!-- Session Goal Settings -->
+                    <div id="session-goal-settings" class="session-goal-settings">
+                        <div class="goal-toggle-row">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="session-goal-enabled">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="goal-toggle-label">Notify me when goal is reached</span>
+                        </div>
+                        <div id="session-goal-input-wrap" class="session-goal-input-wrap hidden">
+                            <input type="number" id="session-goal-minutes" min="1" max="120" value="5">
+                            <span class="input-unit">MIN</span>
+                        </div>
+                    </div>
+
                     <!-- Level 5 Specific Upload -->
                     <div id="sigil-upload-view" class="sigil-upload-container hidden">
                         <p>A practice of yours requires a sigil.</p>
                         <img id="sigil-preview" class="sigil-preview-mini">
                         <label for="sigil-input" class="file-label">SELECT SIGIL IMAGE</label>
                         <input type="file" id="sigil-input" accept="image/*">
+                    </div>
+
+                    <!-- Level 6 Custom Configuration -->
+                    <div id="custom-config-view" class="custom-config-container hidden">
+                        <h4 class="config-header">SHAPE CONFIGURATION</h4>
+
+                        <div class="config-section">
+                            <p class="config-label">SELECT FORM</p>
+                            <div class="shape-grid" id="shape-picker-grid">
+                                <!-- Shapes injected via JS -->
+                            </div>
+                        </div>
+
+                        <div class="config-section">
+                            <p class="config-label">ANIMATIONS</p>
+                            <div class="anim-toggles">
+                                <label class="anim-check">
+                                    <input type="checkbox" id="anim-blink">
+                                    <span class="anim-box"></span>
+                                    <span class="anim-label">BLINK</span>
+                                </label>
+                                <label class="anim-check">
+                                    <input type="checkbox" id="anim-bounce">
+                                    <span class="anim-box"></span>
+                                    <span class="anim-label">BOUNCE</span>
+                                </label>
+                                <label class="anim-check">
+                                    <input type="checkbox" id="anim-rotate">
+                                    <span class="anim-box"></span>
+                                    <span class="anim-label">ROTATE</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <button id="btn-begin-practice" class="btn-solid">BEGIN PRACTICE</button>
@@ -277,6 +367,110 @@
                 </div>
             </div>
         </div>
+
+        <!-- Total Practice Goal Modal -->
+
+
+        <!-- Level Goal Settings Modal -->
+        <div id="level-goal-overlay" class="overlay hidden">
+            <div class="modal goal-modal level-settings-modal">
+                <h3 id="level-goal-title">LEVEL SETTINGS</h3>
+
+                <!-- Per-Level Practice Goal Section -->
+                <div class="settings-section">
+                    <h4 class="section-title">PRACTICE GOAL</h4>
+                    <p class="section-desc">Total practice time target for this level</p>
+                    <div class="goal-toggle-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="level-practice-goal-enabled">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="goal-toggle-label">Enable practice goal</span>
+                    </div>
+                    <div id="level-practice-goal-inputs" class="time-input-group">
+                        <div class="time-input-item">
+                            <input type="number" id="level-practice-goal-hours" min="0" max="999" value="0">
+                            <span class="input-unit">HOURS</span>
+                        </div>
+                        <div class="time-input-item">
+                            <input type="number" id="level-practice-goal-minutes" min="0" max="59" value="0">
+                            <span class="input-unit">MIN</span>
+                        </div>
+                    </div>
+                    <div id="level-practice-progress" class="level-practice-progress">
+                        <div class="progress-text">Progress: <span id="level-practice-current">0h 0m</span> / <span
+                                id="level-practice-target">0h 0m</span></div>
+                        <div class="goal-progress-bar">
+                            <div class="goal-progress-fill" id="level-practice-progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Goal Section -->
+                <div class="settings-section">
+                    <h4 class="section-title">SESSION GOAL</h4>
+                    <p class="section-desc">Alert when this time is reached during practice</p>
+                    <div class="goal-toggle-row">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="level-session-goal-enabled">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="goal-toggle-label">Notify when goal reached</span>
+                    </div>
+                    <div id="level-session-goal-input" class="time-input-group single">
+                        <div class="time-input-item">
+                            <input type="number" id="level-session-goal-minutes" min="1" max="120" value="5">
+                            <span class="input-unit">MIN</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Time Adjustment Section -->
+                <div class="settings-section">
+                    <h4 class="section-title">ADJUST RECORDED TIME</h4>
+                    <p class="section-desc">Add or subtract time from this level's total</p>
+                    <div class="time-adjust-controls">
+                        <div class="time-input-group">
+                            <div class="time-input-item">
+                                <input type="number" id="level-adjust-hours" min="0" max="999" value="0">
+                                <span class="input-unit">HOURS</span>
+                            </div>
+                            <div class="time-input-item">
+                                <input type="number" id="level-adjust-minutes" min="0" max="59" value="0">
+                                <span class="input-unit">MIN</span>
+                            </div>
+                        </div>
+                        <div class="adjust-buttons">
+                            <button id="btn-level-add-time" class="btn-adjust-action btn-add">+ ADD</button>
+                            <button id="btn-level-subtract-time" class="btn-adjust-action btn-subtract">−
+                                SUBTRACT</button>
+                        </div>
+                        <p class="current-total">Current Total: <span id="level-current-total">0h 0m</span></p>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="btn-level-goal-save" class="btn-solid">SAVE SETTINGS</button>
+                    <button id="btn-level-goal-cancel" class="btn-ghost">CANCEL</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goal Reached Celebration Overlay -->
+        <div id="goal-reached-overlay" class="overlay hidden">
+            <div class="modal celebration-modal">
+                <div class="celebration-icon">🎯</div>
+                <h2>GOAL REACHED!</h2>
+                <p>You've hit your session target.</p>
+                <p class="celebration-sub">Continue or finish and record your session.</p>
+                <div class="modal-actions">
+                    <button id="btn-goal-continue" class="btn-solid">CONTINUE PRACTICE</button>
+                    <button id="btn-goal-finish" class="btn-gold">FINISH & RECORD</button>
+                </div>
+            </div>
+        </div>
+
+
 
     </div>
 

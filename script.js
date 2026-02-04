@@ -61,7 +61,32 @@ const LEVELS = {
             "Do not break focus for the full 10 minutes."
         ],
         extra: "When this level is reached, your attention has become more stable—but now you have foundation to focus in general."
+    },
+    6: {
+        id: 6,
+        name: "Custom Practice",
+        duration: 20 * 60, // Default duration, customizable? Let's stick to a base or make it flexible.
+        icon: 'level-custom',
+        steps: [
+            "Configure your focus object.",
+            "Select a shape that resonates with you.",
+            "Apply animations to challenge your focus stability.",
+            "Maintain unwavering attention regardless of the form's change."
+        ]
     }
+};
+
+const SHAPES = {
+    hexagon: { name: "Hexagon" },
+    pentagon: { name: "Pentagon" },
+    octagon: { name: "Octagon" },
+    star: { name: "Star" },
+    diamond: { name: "Diamond" },
+    cross: { name: "Cross" },
+    crescent: { name: "Crescent" },
+    heart: { name: "Heart" },
+    ruby: { name: "Ruby" },
+    infinity: { name: "Infinity" }
 };
 
 // --- State Management ---
@@ -80,7 +105,26 @@ class StorageManager {
                 2: { time: 0, mastered: false, history: [] },
                 3: { time: 0, mastered: false, history: [] },
                 4: { time: 0, mastered: false, history: [] },
-                5: { time: 0, mastered: false, history: [] }
+                5: { time: 0, mastered: false, history: [] },
+                6: { time: 0, mastered: false, history: [] }
+            },
+            // Per-session goals (notify when X minutes reached during a session)
+            levelGoals: {
+                1: { targetMinutes: 2, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                2: { targetMinutes: 4, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                3: { targetMinutes: 6, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                4: { targetMinutes: 6, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                5: { targetMinutes: 10, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                6: { targetMinutes: 20, enabled: false, totalTargetHours: 10, totalEnabled: false }
+            },
+            // Level 6 Configuration
+            customConfig: {
+                shape: 'hexagon',
+                animations: {
+                    blink: false,
+                    bounce: false,
+                    rotate: false
+                }
             },
             sigilImage: null,
             theme: 'dark'
@@ -226,20 +270,28 @@ class ViewManager {
 
 // --- Practice Session Logic ---
 class PracticeSession {
-    constructor(levelId, onComplete, onAbort) {
+    constructor(levelId, onComplete, onAbort, onGoalReached) {
         this.levelId = levelId;
         this.duration = LEVELS[levelId].duration;
         this.remaining = this.duration;
         this.active = false;
         this.onComplete = onComplete;
         this.onAbort = onAbort;
+        this.onGoalReached = onGoalReached;
 
         this.startTime = null;
         this.elapsedBeforePause = 0;
         this.animationFrame = null;
+        this.goalReached = false;
+        this.goalTarget = null;
 
         this.overlay = document.getElementById('exit-overlay');
+        this.goalOverlay = document.getElementById('goal-reached-overlay');
         this.setupEscapeHandler();
+    }
+
+    setGoal(targetMinutes) {
+        this.goalTarget = targetMinutes * 60; // Convert to seconds
     }
 
     start() {
@@ -251,12 +303,49 @@ class PracticeSession {
 
     run() {
         if (!this.active) return;
+
+        // Check for goal reached
+        if (this.goalTarget && !this.goalReached) {
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000) + Math.floor(this.elapsedBeforePause / 1000);
+            if (elapsed >= this.goalTarget) {
+                this.goalReached = true;
+                this.showGoalReached();
+                return;
+            }
+        }
+
         this.animationFrame = requestAnimationFrame(() => this.run());
+    }
+
+    showGoalReached() {
+        this.active = false;
+        cancelAnimationFrame(this.animationFrame);
+        this.elapsedBeforePause = Date.now() - this.startTime;
+        this.goalOverlay.classList.remove('hidden');
+        document.exitPointerLock && document.exitPointerLock();
+        if (this.onGoalReached) this.onGoalReached();
+    }
+
+    continueAfterGoal() {
+        this.goalOverlay.classList.add('hidden');
+        this.startTime = Date.now() - this.elapsedBeforePause;
+        this.active = true;
+        this.enterImmersiveMode();
+        this.run();
+    }
+
+    finishAfterGoal() {
+        this.goalOverlay.classList.add('hidden');
+        const elapsed = Math.floor(this.elapsedBeforePause / 1000);
+        this.exitImmersiveMode();
+        this.onComplete(elapsed);
+        this.removeInputHandler();
     }
 
     handleInput(e) {
         // If click is on the overlay, ignore it so bubbles don't end session
         if (e && e.target.closest('#exit-overlay')) return;
+        if (e && e.target.closest('#goal-reached-overlay')) return;
 
         if (this.active) {
             this.pause();
@@ -335,7 +424,48 @@ class App {
     constructor() {
         this.store = new StorageManager();
         this.view = new ViewManager();
+        this.migrateState(); // Ensure backwards compatibility
         this.init();
+    }
+
+    migrateState() {
+        // Add missing properties for backwards compatibility
+        if (!this.store.state.levelGoals) {
+            this.store.state.levelGoals = {
+                1: { targetMinutes: 2, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                2: { targetMinutes: 4, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                3: { targetMinutes: 6, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                4: { targetMinutes: 6, enabled: false, totalTargetHours: 10, totalEnabled: false },
+                5: { targetMinutes: 10, enabled: false, totalTargetHours: 10, totalEnabled: false }
+            };
+        } else {
+            // Ensure all levels have new properties
+            for (let i = 1; i <= 5; i++) {
+                if (this.store.state.levelGoals[i].totalTargetHours === undefined) {
+                    this.store.state.levelGoals[i].totalTargetHours = 10;
+                    this.store.state.levelGoals[i].totalEnabled = false;
+                }
+            }
+
+            // Level 6 Init
+            if (!this.store.state.levelData[6]) {
+                this.store.state.levelData[6] = { time: 0, mastered: false, history: [] };
+            }
+            if (!this.store.state.levelGoals[6]) {
+                this.store.state.levelGoals[6] = { targetMinutes: 20, enabled: false, totalTargetHours: 10, totalEnabled: false };
+            }
+            if (!this.store.state.customConfig) {
+                this.store.state.customConfig = {
+                    shape: 'hexagon',
+                    animations: {
+                        blink: false,
+                        bounce: false,
+                        rotate: false
+                    }
+                };
+            }
+        }
+        this.store.save();
     }
 
     init() {
@@ -343,7 +473,54 @@ class App {
         this.renderDashboard();
         this.setupThemeToggle();
         this.setupCustomTimeModal();
+        this.setupGoalModals();
+        this.setupCustomConfig();
     }
+
+    setupCustomConfig() {
+        const grid = document.getElementById('shape-picker-grid');
+        const config = this.store.state.customConfig;
+
+        // Populate Shapes
+        Object.entries(SHAPES).forEach(([key, val]) => {
+            const btn = document.createElement('div');
+            btn.classList.add('shape-btn');
+            if (config.shape === key) btn.classList.add('selected');
+            btn.title = val.name;
+
+            // Render preview icon (small SVG)
+            const icon = this.getSVG(key, 40, 2);
+            // Normalize icon size/stroke for button?
+            btn.appendChild(icon);
+
+            btn.addEventListener('click', () => {
+                this.store.state.customConfig.shape = key;
+                this.store.save();
+
+                // UI Update
+                grid.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+            });
+
+            grid.appendChild(btn);
+        });
+
+        // Bind Animations
+        const bindAnim = (id, key) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.checked = config.animations[key];
+            el.addEventListener('change', () => {
+                this.store.state.customConfig.animations[key] = el.checked;
+                this.store.save();
+            });
+        };
+
+        bindAnim('anim-blink', 'blink');
+        bindAnim('anim-bounce', 'bounce');
+        bindAnim('anim-rotate', 'rotate');
+    }
+
 
     setupCustomTimeModal() {
         this.customTimeOverlay = document.getElementById('custom-time-overlay');
@@ -389,6 +566,190 @@ class App {
     closeCustomTimeModal() {
         this.customTimeOverlay.classList.add('hidden');
         this.pendingLevelId = null;
+    }
+
+    setupGoalModals() {
+        // Level Goal Modal
+        this.levelGoalOverlay = document.getElementById('level-goal-overlay');
+        // Session Goal Inputs
+        this.levelSessionGoalInput = document.getElementById('level-session-goal-minutes');
+        this.levelSessionGoalEnabled = document.getElementById('level-session-goal-enabled');
+
+        // Practice Goal Inputs
+        this.levelPracticeGoalEnabled = document.getElementById('level-practice-goal-enabled');
+        this.levelPracticeGoalHours = document.getElementById('level-practice-goal-hours');
+        this.levelPracticeGoalMinutes = document.getElementById('level-practice-goal-minutes');
+
+        // Adjust Inputs
+        this.levelAdjustHours = document.getElementById('level-adjust-hours');
+        this.levelAdjustMinutes = document.getElementById('level-adjust-minutes');
+
+        this.levelGoalTitle = document.getElementById('level-goal-title');
+        this.pendingGoalLevelId = null;
+
+        document.querySelectorAll('.btn-card-info').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const levelId = parseInt(btn.dataset.level);
+                this.showLevelGoalModal(levelId);
+            });
+        });
+
+        document.getElementById('btn-level-goal-save').addEventListener('click', () => {
+            if (this.pendingGoalLevelId) {
+                // Save Session Goal
+                const sessionMinutes = parseInt(this.levelSessionGoalInput.value) || 5;
+                this.store.state.levelGoals[this.pendingGoalLevelId].targetMinutes = Math.max(1, sessionMinutes);
+                this.store.state.levelGoals[this.pendingGoalLevelId].enabled = this.levelSessionGoalEnabled.checked;
+
+                // Save Practice Goal
+                const practiceHours = parseInt(this.levelPracticeGoalHours.value) || 0;
+                const practiceMinutes = parseInt(this.levelPracticeGoalMinutes.value) || 0;
+                // Convert to floating point hours for storage or just store hours? 
+                // Let's store totalTargetHours as a float if needed, but UI shows hours.
+                // Simple approach: Store totalTargetHours. 
+                // We'll treat the input as: Hours + (Minutes/60)
+                const totalTargetHours = practiceHours + (practiceMinutes / 60);
+                this.store.state.levelGoals[this.pendingGoalLevelId].totalTargetHours = Math.max(0.1, totalTargetHours);
+                this.store.state.levelGoals[this.pendingGoalLevelId].totalEnabled = this.levelPracticeGoalEnabled.checked;
+
+                this.store.save();
+                this.renderDashboard();
+            }
+            this.closeLevelGoalModal();
+        });
+
+        document.getElementById('btn-level-goal-cancel').addEventListener('click', () => {
+            this.closeLevelGoalModal();
+        });
+
+        // Time Adjustment Handlers within Modal
+        const handleLevelTimeAdjust = (isAdd) => {
+            if (!this.pendingGoalLevelId) return;
+            const hours = parseInt(this.levelAdjustHours.value) || 0;
+            const minutes = parseInt(this.levelAdjustMinutes.value) || 0;
+            const totalMinutes = (hours * 60) + minutes;
+            if (totalMinutes === 0) return;
+
+            const adjustAmount = isAdd ? totalMinutes : -totalMinutes;
+
+            if (this.store.adjustTime(this.pendingGoalLevelId, adjustAmount)) {
+                // Update the modal UI immediately to show new total
+                this.updateLevelGoalModalProgress();
+                // Reset inputs
+                this.levelAdjustHours.value = 0;
+                this.levelAdjustMinutes.value = 0;
+            }
+        };
+
+        document.getElementById('btn-level-add-time').addEventListener('click', () => handleLevelTimeAdjust(true));
+        document.getElementById('btn-level-subtract-time').addEventListener('click', () => handleLevelTimeAdjust(false));
+
+        this.levelGoalOverlay.addEventListener('click', (e) => {
+            if (e.target === this.levelGoalOverlay) this.closeLevelGoalModal();
+        });
+
+        // Session Goal Toggle in Instruction View
+        const sessionGoalEnabled = document.getElementById('session-goal-enabled');
+        const sessionGoalInputWrap = document.getElementById('session-goal-input-wrap');
+        const sessionGoalMinutes = document.getElementById('session-goal-minutes');
+
+        sessionGoalEnabled.addEventListener('change', () => {
+            if (sessionGoalEnabled.checked) {
+                sessionGoalInputWrap.classList.remove('hidden');
+            } else {
+                sessionGoalInputWrap.classList.add('hidden');
+            }
+            // Update level goal settings
+            if (this.selectedLevelId) {
+                this.store.state.levelGoals[this.selectedLevelId].enabled = sessionGoalEnabled.checked;
+                this.store.state.levelGoals[this.selectedLevelId].targetMinutes = parseInt(sessionGoalMinutes.value) || 5;
+                this.store.save();
+            }
+        });
+
+        sessionGoalMinutes.addEventListener('change', () => {
+            if (this.selectedLevelId) {
+                this.store.state.levelGoals[this.selectedLevelId].targetMinutes = parseInt(sessionGoalMinutes.value) || 5;
+                this.store.save();
+            }
+        });
+
+        // Goal Reached Overlay Buttons
+        document.getElementById('btn-goal-continue').addEventListener('click', () => {
+            if (this.currentSession) this.currentSession.continueAfterGoal();
+        });
+
+        document.getElementById('btn-goal-finish').addEventListener('click', () => {
+            if (this.currentSession) this.currentSession.finishAfterGoal();
+        });
+    }
+
+    showLevelGoalModal(levelId) {
+        this.pendingGoalLevelId = levelId;
+        const goal = this.store.state.levelGoals[levelId];
+        const level = LEVELS[levelId];
+        this.levelGoalTitle.innerText = `${level.name.toUpperCase()} SETTINGS`;
+
+        // Session Goal
+        this.levelSessionGoalInput.value = goal.targetMinutes;
+        this.levelSessionGoalEnabled.checked = goal.enabled;
+
+        // Practice Goal
+        const totalTarget = goal.totalTargetHours || 10;
+        const practiceGoalMajor = Math.floor(totalTarget);
+        const practiceGoalMinor = Math.round((totalTarget - practiceGoalMajor) * 60);
+
+        this.levelPracticeGoalHours.value = practiceGoalMajor;
+        this.levelPracticeGoalMinutes.value = practiceGoalMinor;
+        this.levelPracticeGoalEnabled.checked = goal.totalEnabled || false;
+
+        // Reset Adjust Inputs
+        this.levelAdjustHours.value = 0;
+        this.levelAdjustMinutes.value = 0;
+
+        // Update Progress UI
+        this.updateLevelGoalModalProgress();
+
+        this.levelGoalOverlay.classList.remove('hidden');
+    }
+
+    updateLevelGoalModalProgress() {
+        if (!this.pendingGoalLevelId) return;
+        const levelId = this.pendingGoalLevelId;
+        const data = this.store.state.levelData[levelId];
+        const goal = this.store.state.levelGoals[levelId];
+
+        // Calculate current time
+        const currentSeconds = data.time || 0;
+        const currentHours = Math.floor(currentSeconds / 3600);
+        const currentRemainingMinutes = Math.floor((currentSeconds % 3600) / 60);
+
+        // Update Text
+        document.getElementById('level-current-total').innerText = `${currentHours}h ${currentRemainingMinutes}m`;
+        document.getElementById('level-practice-current').innerText = `${currentHours}h ${currentRemainingMinutes}m`;
+
+        const targetHours = goal.totalTargetHours || 10;
+        // Format target for display (e.g. 10.5 -> 10h 30m)
+        const tMajor = Math.floor(targetHours);
+        const tMinor = Math.round((targetHours - tMajor) * 60);
+        document.getElementById('level-practice-target').innerText = `${tMajor}h ${tMinor}m`;
+
+        // Update Progress Bar
+        const progressFill = document.getElementById('level-practice-progress-fill');
+        const targetSeconds = targetHours * 3600;
+        if (targetSeconds > 0) {
+            const pct = Math.min(100, (currentSeconds / targetSeconds) * 100);
+            progressFill.style.width = `${pct}%`;
+        } else {
+            progressFill.style.width = '0%';
+        }
+    }
+
+    closeLevelGoalModal() {
+        this.levelGoalOverlay.classList.add('hidden');
+        this.pendingGoalLevelId = null;
+        this.renderDashboard(); // Re-render to update dashboard stats if changed via adjust
     }
 
     setupThemeToggle() {
@@ -573,18 +934,21 @@ class App {
         const p2 = document.getElementById('instruction-p2');
         const p3 = document.getElementById('instruction-p3');
         const uploadView = document.getElementById('sigil-upload-view');
+        const customConfigView = document.getElementById('custom-config-view');
         const masteryInfo = document.getElementById('mastery-info');
 
         // Reset
         p1.innerText = ''; p2.innerText = ''; p3.innerText = '';
         masteryInfo.classList.add('hidden');
+        uploadView.classList.add('hidden');
+        if (customConfigView) customConfigView.classList.add('hidden');
 
         // Populate steps
         if (level.steps[0]) p1.innerText = level.steps[0];
         if (level.steps[1]) p2.innerText = level.steps[1];
         if (level.steps[2]) p3.innerText = level.steps[2];
 
-        // Level 5 specifics
+        // Level Specific Views
         if (levelId === 5) {
             uploadView.classList.remove('hidden');
             this.updateSigilPreview();
@@ -592,9 +956,25 @@ class App {
             p1.innerText = level.extra;
             p2.innerText = level.steps[0] + " " + level.steps[1];
             p3.innerText = level.steps[2] + " " + level.steps[3];
+        } else if (levelId === 6) {
+            if (customConfigView) customConfigView.classList.remove('hidden');
+            p2.innerText = level.steps[1] + " " + level.steps[2];
         } else {
-            uploadView.classList.add('hidden');
             masteryInfo.classList.remove('hidden'); // Show mastery criteria for preparatory levels
+        }
+
+        // Populate session goal settings
+        const goal = this.store.state.levelGoals[levelId];
+        const sessionGoalEnabled = document.getElementById('session-goal-enabled');
+        const sessionGoalInputWrap = document.getElementById('session-goal-input-wrap');
+        const sessionGoalMinutes = document.getElementById('session-goal-minutes');
+
+        sessionGoalEnabled.checked = goal.enabled;
+        sessionGoalMinutes.value = goal.targetMinutes;
+        if (goal.enabled) {
+            sessionGoalInputWrap.classList.remove('hidden');
+        } else {
+            sessionGoalInputWrap.classList.add('hidden');
         }
 
         this.view.show('instruction');
@@ -607,8 +987,15 @@ class App {
         this.currentSession = new PracticeSession(
             this.selectedLevelId,
             (duration) => this.handleSessionComplete(duration),
-            () => { }
+            () => { },
+            () => { } // onGoalReached - no special handling needed, UI handles it
         );
+
+        // Set goal if enabled for this level
+        const goal = this.store.state.levelGoals[this.selectedLevelId];
+        if (goal.enabled) {
+            this.currentSession.setGoal(goal.targetMinutes);
+        }
 
         setTimeout(() => this.currentSession.start(), 100);
     }
@@ -645,17 +1032,22 @@ class App {
         this.view.show('debrief');
     }
 
+
+
     renderDashboard() {
         const totalSec = this.store.state.totalTime || 0;
         const hrs = Math.floor(totalSec / 3600);
         const mins = Math.floor((totalSec % 3600) / 60);
         document.getElementById('total-time-display').innerText = `${hrs}h ${mins}m`;
 
+
+
         const allSessions = [];
 
         document.querySelectorAll('.level-card').forEach(card => {
             const lid = parseInt(card.dataset.level);
             const data = this.store.state.levelData[lid];
+            const levelGoal = this.store.state.levelGoals[lid];
 
             // All levels unlocked
             card.classList.remove('locked');
@@ -664,6 +1056,33 @@ class App {
             const history = data.history || [];
             const timeDisplay = card.querySelector('.level-time');
             if (timeDisplay) timeDisplay.innerText = `Sessions: ${history.length} | Total: ${lMin}m`;
+
+            // Show goal status on card
+            const goalStatus = card.querySelector('[data-goal-status]');
+            if (goalStatus) {
+                let statusHtml = '';
+
+                // Practice Goal Status
+                if (levelGoal.totalEnabled) {
+                    const targetHours = levelGoal.totalTargetHours || 10;
+                    const lHours = Math.floor(lMin / 60);
+                    // Use a shorter format if space is tight
+                    statusHtml += `<span class="status-item practice">🏆 ${lHours}h/${targetHours}h</span>`;
+                }
+
+                // Session Goal Status
+                if (levelGoal.enabled) {
+                    if (statusHtml) statusHtml += ' <span class="separator">|</span> ';
+                    statusHtml += `<span class="status-item session">🎯 ${levelGoal.targetMinutes}m</span>`;
+                }
+
+                if (statusHtml) {
+                    goalStatus.classList.remove('hidden');
+                    goalStatus.innerHTML = statusHtml;
+                } else {
+                    goalStatus.classList.add('hidden');
+                }
+            }
 
             // Aggregation for global log
             history.forEach(session => {
@@ -735,6 +1154,52 @@ class App {
             img.src = this.store.state.sigilImage;
             img.classList.add('p-sigil');
             shapeWrap.appendChild(img);
+        } else if (levelId === 6) {
+            const config = this.store.state.customConfig;
+            const size = 400;
+            const ns = "http://www.w3.org/2000/svg";
+
+            // 6. Custom Practice: Separated Dot and Shape
+            const svg = document.createElementNS(ns, "svg");
+            svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+
+            // Get form element (without dot)
+            // Note: getSVG(type, size, stroke, false) returns SVG with just the form
+            const tempSvg = this.getSVG(config.shape, size, 3, false);
+            const formNode = tempSvg.firstElementChild;
+
+            if (formNode) {
+                // Create Animation Hierarchy (Inner -> Outer)
+                const anims = config.animations;
+                let content = formNode;
+
+                const wrap = (cls) => {
+                    const g = document.createElementNS(ns, "g");
+                    g.classList.add(cls);
+                    // Fix transform origin for SVG elements
+                    g.style.transformOrigin = "center";
+                    g.style.transformBox = "view-box";
+                    g.appendChild(content);
+                    content = g;
+                };
+
+                // Apply animations
+                if (anims.blink) wrap('anim-wrapper-blink');
+                if (anims.bounce) wrap('anim-wrapper-bounce');
+                if (anims.rotate) wrap('anim-wrapper-rotate');
+
+                svg.appendChild(content);
+            }
+
+            // Static Dot (On Top)
+            const dot = document.createElementNS(ns, "circle");
+            const c = size / 2;
+            dot.setAttribute("cx", c); dot.setAttribute("cy", c);
+            dot.setAttribute("r", size * 0.02);
+            dot.setAttribute("fill", "white");
+            svg.appendChild(dot);
+
+            shapeWrap.appendChild(svg);
         } else {
             shapeWrap.appendChild(this.getSVG(levelId, 400, 3));
         }
@@ -742,7 +1207,7 @@ class App {
         container.appendChild(shapeWrap);
     }
 
-    getSVG(levelId, size, strokeWidth) {
+    getSVG(type, size, strokeWidth, includeDot = true) {
         const ns = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(ns, "svg");
         svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
@@ -750,44 +1215,140 @@ class App {
         const center = size / 2;
         const color = "white";
 
-        // Dot
+        // Dot (Always present for standard levels, what about custom? Steps say "focus object")
+        // Level 6 implies "Custom Practice" -> "The Form". 
+        // Let's include the dot if it's not a purely filled shape or if user expects it.
+        // Standard forms (1-4) have a dot. Custom forms usually surround a dot or ARE the object.
+        // Steps say "Select a shape... Focus on the dot within?" or "Select a shape that resonates".
+        // Let's assume there's a dot for consistency unless the shape IS the focus.
+        // I will add a dot for all linear shapes.
+
         const dot = document.createElementNS(ns, "circle");
         dot.setAttribute("cx", center);
         dot.setAttribute("cy", center);
-        dot.setAttribute("r", levelId === 1 ? size * 0.02 : size * 0.02);
+        dot.setAttribute("r", size * 0.02);
         dot.setAttribute("fill", color);
 
         let form = null;
-        if (levelId === 2) {
+
+        // Helper for Regular Polygons
+        const createPoly = (sides, r) => {
+            let pts = [];
+            for (let i = 0; i < sides; i++) {
+                // -PI/2 to start at top
+                const th = (Math.PI * 2 * i / sides) - Math.PI / 2;
+                pts.push(`${center + r * Math.cos(th)},${center + r * Math.sin(th)}`);
+            }
+            return pts.join(' ');
+        };
+
+        if (type === 1) { /* Dot only */ }
+        else if (type === 2) { // Circle
             form = document.createElementNS(ns, "circle");
-            form.setAttribute("cx", center);
-            form.setAttribute("cy", center);
+            form.setAttribute("cx", center); form.setAttribute("cy", center);
             form.setAttribute("r", size * 0.4);
-        } else if (levelId === 3) {
+        }
+        else if (type === 3) { // Square
             const s = size * 0.7;
             form = document.createElementNS(ns, "rect");
-            form.setAttribute("x", center - s / 2);
-            form.setAttribute("y", center - s / 2);
-            form.setAttribute("width", s);
-            form.setAttribute("height", s);
-        } else if (levelId === 4) {
-            const s = size * 0.8;
-            const h = (Math.sqrt(3) / 2) * s;
-            const top = center - (2 / 3) * h;
-            const bottom = center + (1 / 3) * h;
-            const left = center - s / 2;
-            const right = center + s / 2;
+            form.setAttribute("x", center - s / 2); form.setAttribute("y", center - s / 2);
+            form.setAttribute("width", s); form.setAttribute("height", s);
+        }
+        else if (type === 4) { // Triangle
+            const r = size * 0.45;
+            // 3 sides
+            const pts = createPoly(3, r);
             form = document.createElementNS(ns, "polygon");
-            form.setAttribute("points", `${center},${top} ${right},${bottom} ${left},${bottom}`);
+            form.setAttribute("points", pts);
+        }
+        // Custom Shapes
+        else if (type === 'hexagon') {
+            form = document.createElementNS(ns, "polygon");
+            form.setAttribute("points", createPoly(6, size * 0.4));
+        }
+        else if (type === 'pentagon') {
+            form = document.createElementNS(ns, "polygon");
+            form.setAttribute("points", createPoly(5, size * 0.4));
+        }
+        else if (type === 'octagon') {
+            form = document.createElementNS(ns, "polygon");
+            form.setAttribute("points", createPoly(8, size * 0.4));
+        }
+        else if (type === 'diamond') {
+            // Rhombus: Rect rotated 45deg or polygon
+            form = document.createElementNS(ns, "polygon");
+            const r = size * 0.4;
+            // top, right, bottom, left
+            form.setAttribute("points", `${center},${center - r} ${center + r * 0.7},${center} ${center},${center + r} ${center - r * 0.7},${center}`);
+        }
+        else if (type === 'star') {
+            form = document.createElementNS(ns, "polygon");
+            const outer = size * 0.45;
+            const inner = size * 0.2;
+            const pts = [];
+            for (let i = 0; i < 10; i++) {
+                const r = i % 2 === 0 ? outer : inner;
+                const th = (Math.PI * 2 * i / 10) - Math.PI / 2;
+                pts.push(`${center + r * Math.cos(th)},${center + r * Math.sin(th)}`);
+            }
+            form.setAttribute("points", pts.join(' '));
+        }
+        else if (type === 'cross') {
+            form = document.createElementNS(ns, "path");
+            const L = size * 0.4;
+            const T = size * 0.12;
+            // Draw cross path
+            form.setAttribute("d", `M${center - T},${center - L} H${center + T} V${center - T} H${center + L} V${center + T} H${center + T} V${center + L} H${center - T} V${center + T} H${center - L} V${center - T} H${center - T} Z`);
+        }
+        else if (type === 'crescent') {
+            form = document.createElementNS(ns, "path");
+            const r = size * 0.35;
+            // Circle minus offset circle
+            form.setAttribute("d", `M${center + r * 0.5},${center - r * 0.8} A${r},${r} 0 1,1 ${center + r * 0.5},${center + r * 0.8} A${r * 1.2},${r * 1.2} 0 1,0 ${center + r * 0.5},${center - r * 0.8} Z`);
+        }
+        else if (type === 'heart') {
+            form = document.createElementNS(ns, "path");
+            const s = size * 0.012; // scale factor
+            // simple heart path centered roughly
+            // M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 Z
+            // Need to translate/scale to center
+            const path = "M 25,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 75,30 Q 75,60 50,85 Q 25,60 25,30 Z";
+            // Better to generate points or use a standard path string normalized to size
+            // Using a simpler approximator logic
+            form.setAttribute("d", `M${center},${center + size * 0.25} C${center},${center - size * 0.1} ${center - size * 0.5},${center - size * 0.3} ${center - size * 0.35},${center - size * 0.2} C${center - size * 0.1},${center - size * 0.05} ${center - size * 0.1},${center + size * 0.1} ${center},${center + size * 0.35} C${center + size * 0.1},${center + size * 0.1} ${center + size * 0.1},${center - size * 0.05} ${center + size * 0.35},${center - size * 0.2} C${center + size * 0.5},${center - size * 0.3} ${center},${center - size * 0.1} ${center},${center + size * 0.25} Z`);
+            // Actually, standard Bezier heart:
+            form.setAttribute("d", `M${center},${center + size * 0.15} C${center},${center - size * 0.1} ${center - size * 0.45},${center - size * 0.3} ${center - size * 0.45},${center - size * 0.1} C${center - size * 0.45},${center + size * 0.1} ${center - size * 0.2},${center + size * 0.25} ${center},${center + size * 0.4} C${center + size * 0.2},${center + size * 0.25} ${center + size * 0.45},${center + size * 0.1} ${center + size * 0.45},${center - size * 0.1} C${center + size * 0.45},${center - size * 0.3} ${center},${center - size * 0.1} ${center},${center + size * 0.15} Z`);
+            // Inverting Y for SVG coords? No, SVG Y+ is down. 
+            // Start at bottom tip?
+            // M center, bottom
+            // Let's use a standard path
+            form.setAttribute("d", `M${center},${center + size * 0.35} C${center - size * 0.4},${center - size * 0.15} ${center - size * 0.4},${center - size * 0.45} ${center},${center - size * 0.25} C${center + size * 0.4},${center - size * 0.45} ${center + size * 0.4},${center - size * 0.15} ${center},${center + size * 0.35}`);
+        }
+        else if (type === 'ruby') {
+            form = document.createElementNS(ns, "polygon");
+            // Trapezoid top, triangle bot
+            const w = size * 0.35;
+            const h1 = size * 0.15;
+            const h2 = size * 0.35;
+            form.setAttribute("points", `${center - w * 0.6},${center - h1} ${center + w * 0.6},${center - h1} ${center + w},${center} ${center},${center + h2} ${center - w},${center}`);
+        }
+        else if (type === 'infinity') {
+            form = document.createElementNS(ns, "path");
+            const w = size * 0.35;
+            const h = size * 0.15;
+            form.setAttribute("d", `M${center},${center} C${center - w},${center - h * 4} ${center - w},${center + h * 4} ${center},${center} C${center + w},${center - h * 4} ${center + w},${center + h * 4} ${center},${center} Z`);
+            form.setAttribute("fill", "none");
         }
 
         if (form) {
-            form.setAttribute("fill", "none");
+            if (!form.getAttribute("fill")) form.setAttribute("fill", "none");
             form.setAttribute("stroke", color);
             form.setAttribute("stroke-width", strokeWidth);
             svg.appendChild(form);
         }
-        svg.appendChild(dot);
+        if (includeDot) {
+            svg.appendChild(dot);
+        }
         return svg;
     }
 
