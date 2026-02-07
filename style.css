@@ -1630,3 +1630,36 @@ button:active::after {
         justify-content: space-between;
     }
 }
+
+/* --- Mobile Touch & Usability Improvements --- */
+@media (hover: none),
+(max-width: 768px) {
+
+    /* Always show controls on touch devices (no hover) */
+    .manual-adjust {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        z-index: 20;
+        /* Ensure it sits above the card click area */
+        gap: 0.8rem;
+        /* Slightly more space between buttons */
+    }
+
+    .btn-card-info {
+        opacity: 1 !important;
+        transform: scale(1) !important;
+        z-index: 20;
+
+        /* Larger touch target */
+        width: 44px;
+        height: 44px;
+        font-size: 1.1rem;
+    }
+
+    .btn-adjust {
+        /* Larger touch target (min 44px recommended) */
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+}
