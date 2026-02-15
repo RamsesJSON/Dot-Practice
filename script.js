@@ -1,5 +1,5 @@
 /**
- * THE PRACTICE
+ * DOT MEDITATION
  * "Attention is Form."
  */
 
@@ -57,7 +57,7 @@ const LEVELS = {
         steps: [
             "Select a God Sigil of your choice.",
             "Place the image before you.",
-            "Focus on the Sigil’s visual center, with unwavering attention, then expand your attention to the entire pattern. Allow the pattern to be experienced by your attention.",
+            "Focus on the Sigil's visual center, with unwavering attention, then expand your attention to the entire pattern. Allow the pattern to be experienced by your attention.",
             "Do not break focus for the full 10 minutes."
         ],
         extra: "When this level is reached, your attention has become more stable—but now you have foundation to focus in general."
@@ -65,7 +65,7 @@ const LEVELS = {
     6: {
         id: 6,
         name: "Custom Practice",
-        duration: 20 * 60, // Default duration, customizable? Let's stick to a base or make it flexible.
+        duration: 20 * 60,
         icon: 'level-custom',
         steps: [
             "Configure your focus object.",
@@ -89,6 +89,19 @@ const SHAPES = {
     infinity: { name: "Infinity" }
 };
 
+const MOTIVATIONAL_MESSAGES = [
+    "The mind sharpens with each session.",
+    "Consistency forges strength — return tomorrow.",
+    "Every second of focused attention rewires your brain.",
+    "Stillness is a skill. You are building it.",
+    "The scattered mind becomes a blade through practice.",
+    "Your attention is your most powerful tool. Sharpen it.",
+    "Today's effort is tomorrow's effortless focus.",
+    "Progress is measured in presence, not perfection."
+];
+
+const THEMES = ['dark', 'light', 'ink'];
+
 // --- State Management ---
 class StorageManager {
     constructor() {
@@ -99,7 +112,7 @@ class StorageManager {
     defaultState() {
         return {
             totalTime: 0,
-            unlockedLevel: 5, // All levels unlocked by default now
+            unlockedLevel: 5,
             levelData: {
                 1: { time: 0, mastered: false, history: [] },
                 2: { time: 0, mastered: false, history: [] },
@@ -108,7 +121,6 @@ class StorageManager {
                 5: { time: 0, mastered: false, history: [] },
                 6: { time: 0, mastered: false, history: [] }
             },
-            // Per-session goals (notify when X minutes reached during a session)
             levelGoals: {
                 1: { targetMinutes: 2, enabled: false, totalTargetHours: 10, totalEnabled: false },
                 2: { targetMinutes: 4, enabled: false, totalTargetHours: 10, totalEnabled: false },
@@ -117,14 +129,9 @@ class StorageManager {
                 5: { targetMinutes: 10, enabled: false, totalTargetHours: 10, totalEnabled: false },
                 6: { targetMinutes: 20, enabled: false, totalTargetHours: 10, totalEnabled: false }
             },
-            // Level 6 Configuration
             customConfig: {
                 shape: 'hexagon',
-                animations: {
-                    blink: false,
-                    bounce: false,
-                    rotate: false
-                }
+                animations: { blink: false, bounce: false, rotate: false }
             },
             sigilImage: null,
             theme: 'dark'
@@ -146,7 +153,6 @@ class StorageManager {
             localStorage.setItem(this.key, JSON.stringify(this.state));
         } catch (e) {
             console.error("Storage save failed", e);
-            // Handle quota exceeded for sigil images potentially
         }
     }
 
@@ -158,8 +164,6 @@ class StorageManager {
             date: new Date().toISOString(),
             duration: seconds
         });
-
-        // Recalculate totals
         this.state.levelData[levelId].time += seconds;
         this.state.totalTime += seconds;
         this.save();
@@ -170,21 +174,9 @@ class StorageManager {
         if (!this.state.levelData[levelId].history) {
             this.state.levelData[levelId].history = [];
         }
-
-        // Don't allow negative total time for level
         if (this.state.levelData[levelId].time + seconds < 0) {
             return false;
         }
-
-        // User requested not to add sessions for manual adjustments
-        /*
-        this.state.levelData[levelId].history.push({
-            date: new Date().toISOString(),
-            duration: seconds,
-            manual: true
-        });
-        */
-
         this.state.levelData[levelId].time += seconds;
         this.state.totalTime += seconds;
         this.save();
@@ -195,7 +187,6 @@ class StorageManager {
         const dataStr = JSON.stringify(this.state, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
         const exportFileDefaultName = `dot_practice_export_${new Date().toISOString().split('T')[0]}.json`;
-
         const linkElement = document.createElement('a');
         linkElement.setAttribute('href', dataUri);
         linkElement.setAttribute('download', exportFileDefaultName);
@@ -205,7 +196,6 @@ class StorageManager {
     importData(jsonData) {
         try {
             const parsed = JSON.parse(jsonData);
-            // Basic validation: check if it has the expected structure
             if (parsed && typeof parsed.totalTime === 'number' && parsed.levelData) {
                 this.state = parsed;
                 this.save();
@@ -217,11 +207,52 @@ class StorageManager {
         return false;
     }
 
+    resetData() {
+        this.state = this.defaultState();
+        this.save();
+    }
+
     markMastery(levelId) {
         if (this.state.levelData[levelId]) {
             this.state.levelData[levelId].mastered = true;
             this.save();
         }
+    }
+
+    // Calculate streak (consecutive days with sessions)
+    getStreak() {
+        const allDates = new Set();
+        for (let lid = 1; lid <= 6; lid++) {
+            const history = this.state.levelData[lid]?.history || [];
+            history.forEach(s => {
+                if (!s.manual) {
+                    const d = new Date(s.date);
+                    allDates.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+                }
+            });
+        }
+        if (allDates.size === 0) return 0;
+
+        // Sort dates and count consecutive from today backwards
+        const today = new Date();
+        let streak = 0;
+        let checkDate = new Date(today);
+
+        for (let i = 0; i < 365; i++) {
+            const key = `${checkDate.getFullYear()}-${checkDate.getMonth()}-${checkDate.getDate()}`;
+            if (allDates.has(key)) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+                // Allow today to not count yet if no session today
+                if (i === 0) {
+                    checkDate.setDate(checkDate.getDate() - 1);
+                    continue;
+                }
+                break;
+            }
+        }
+        return streak;
     }
 }
 
@@ -255,13 +286,12 @@ class ViewManager {
             el.classList.remove('active');
             setTimeout(() => {
                 if (!el.classList.contains('active')) el.classList.add('hidden');
-            }, 800); // Match transition duration
+            }, 800);
         });
 
         // Show target
         const target = this.views[viewName];
         target.classList.remove('hidden');
-        // Small delay to allow display:block to apply before opacity transition
         requestAnimationFrame(() => {
             target.classList.add('active');
         });
@@ -287,11 +317,16 @@ class PracticeSession {
 
         this.overlay = document.getElementById('exit-overlay');
         this.goalOverlay = document.getElementById('goal-reached-overlay');
+        this.elapsedTimerEl = document.getElementById('elapsed-timer');
+
+        this.timerShowTimeout = null;
+        this.timerHideTimeout = null;
+
         this.setupEscapeHandler();
     }
 
     setGoal(targetMinutes) {
-        this.goalTarget = targetMinutes * 60; // Convert to seconds
+        this.goalTarget = targetMinutes * 60;
     }
 
     start() {
@@ -299,14 +334,18 @@ class PracticeSession {
         this.startTime = Date.now();
         this.run();
         this.enterImmersiveMode();
+        this.showTimerBriefly();
     }
 
     run() {
         if (!this.active) return;
 
+        // Update elapsed timer
+        const elapsed = Math.floor((Date.now() - this.startTime) / 1000) + Math.floor(this.elapsedBeforePause / 1000);
+        this.updateTimerDisplay(elapsed);
+
         // Check for goal reached
         if (this.goalTarget && !this.goalReached) {
-            const elapsed = Math.floor((Date.now() - this.startTime) / 1000) + Math.floor(this.elapsedBeforePause / 1000);
             if (elapsed >= this.goalTarget) {
                 this.goalReached = true;
                 this.showGoalReached();
@@ -315,6 +354,31 @@ class PracticeSession {
         }
 
         this.animationFrame = requestAnimationFrame(() => this.run());
+    }
+
+    updateTimerDisplay(totalSeconds) {
+        const m = Math.floor(totalSeconds / 60);
+        const s = totalSeconds % 60;
+        this.elapsedTimerEl.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    showTimerBriefly() {
+        // Show timer for 5 seconds initially, then fade out
+        this.elapsedTimerEl.classList.add('visible');
+        this.elapsedTimerEl.classList.remove('peek');
+        clearTimeout(this.timerHideTimeout);
+        this.timerHideTimeout = setTimeout(() => {
+            this.elapsedTimerEl.classList.remove('visible');
+        }, 5000);
+    }
+
+    peekTimer() {
+        // Briefly flash the timer on interaction (before pausing)
+        this.elapsedTimerEl.classList.add('peek');
+        clearTimeout(this.timerShowTimeout);
+        this.timerShowTimeout = setTimeout(() => {
+            this.elapsedTimerEl.classList.remove('peek');
+        }, 3000);
     }
 
     showGoalReached() {
@@ -338,12 +402,12 @@ class PracticeSession {
         this.goalOverlay.classList.add('hidden');
         const elapsed = Math.floor(this.elapsedBeforePause / 1000);
         this.exitImmersiveMode();
+        this.hideTimer();
         this.onComplete(elapsed);
         this.removeInputHandler();
     }
 
     handleInput(e) {
-        // If click is on the overlay, ignore it so bubbles don't end session
         if (e && e.target.closest('#exit-overlay')) return;
         if (e && e.target.closest('#goal-reached-overlay')) return;
 
@@ -358,6 +422,7 @@ class PracticeSession {
         const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
         this.overlay.classList.add('hidden');
         this.exitImmersiveMode();
+        this.hideTimer();
         this.onComplete(elapsed);
         this.removeInputHandler();
     }
@@ -373,11 +438,11 @@ class PracticeSession {
 
     resume() {
         this.overlay.classList.add('hidden');
-        // Restore the timer to the exact point it was paused
         this.startTime = Date.now() - this.elapsedBeforePause;
         this.active = true;
         this.enterImmersiveMode();
         this.run();
+        this.showTimerBriefly();
     }
 
     abort() {
@@ -385,12 +450,18 @@ class PracticeSession {
         cancelAnimationFrame(this.animationFrame);
         this.overlay.classList.add('hidden');
         this.exitImmersiveMode();
+        this.hideTimer();
         this.onAbort();
+    }
+
+    hideTimer() {
+        this.elapsedTimerEl.classList.remove('visible', 'peek');
+        clearTimeout(this.timerHideTimeout);
+        clearTimeout(this.timerShowTimeout);
     }
 
     enterImmersiveMode() {
         document.body.requestFullscreen().catch(err => console.log("Fullscreen blocked", err));
-        // cursor hiding is handled by CSS on #view-practice
     }
 
     exitImmersiveMode() {
@@ -424,12 +495,11 @@ class App {
     constructor() {
         this.store = new StorageManager();
         this.view = new ViewManager();
-        this.migrateState(); // Ensure backwards compatibility
+        this.migrateState();
         this.init();
     }
 
     migrateState() {
-        // Add missing properties for backwards compatibility
         if (!this.store.state.levelGoals) {
             this.store.state.levelGoals = {
                 1: { targetMinutes: 2, enabled: false, totalTargetHours: 10, totalEnabled: false },
@@ -439,7 +509,6 @@ class App {
                 5: { targetMinutes: 10, enabled: false, totalTargetHours: 10, totalEnabled: false }
             };
         } else {
-            // Ensure all levels have new properties
             for (let i = 1; i <= 5; i++) {
                 if (this.store.state.levelGoals[i].totalTargetHours === undefined) {
                     this.store.state.levelGoals[i].totalTargetHours = 10;
@@ -447,7 +516,6 @@ class App {
                 }
             }
 
-            // Level 6 Init
             if (!this.store.state.levelData[6]) {
                 this.store.state.levelData[6] = { time: 0, mastered: false, history: [] };
             }
@@ -457,14 +525,18 @@ class App {
             if (!this.store.state.customConfig) {
                 this.store.state.customConfig = {
                     shape: 'hexagon',
-                    animations: {
-                        blink: false,
-                        bounce: false,
-                        rotate: false
-                    }
+                    animations: { blink: false, bounce: false, rotate: false }
                 };
             }
         }
+
+        // Migrate theme from old 'light'/'dark' to new system
+        if (this.store.state.theme === 'light') {
+            this.store.state.theme = 'light';
+        } else if (!THEMES.includes(this.store.state.theme)) {
+            this.store.state.theme = 'dark';
+        }
+
         this.store.save();
     }
 
@@ -475,29 +547,86 @@ class App {
         this.setupCustomTimeModal();
         this.setupGoalModals();
         this.setupCustomConfig();
+        this.setupKeyboardShortcuts();
+        this.spawnParticles('intro-particles', 15);
+        this.spawnParticles('dashboard-particles', 10);
+    }
+
+    // --- Ambient Particles ---
+    spawnParticles(containerId, count) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = (50 + Math.random() * 50) + '%';
+            p.style.animationDuration = (15 + Math.random() * 25) + 's';
+            p.style.animationDelay = (Math.random() * 15) + 's';
+            p.style.width = (1 + Math.random() * 2) + 'px';
+            p.style.height = p.style.width;
+            container.appendChild(p);
+        }
+    }
+
+    // --- Keyboard Shortcuts ---
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Space to pause/resume during practice
+            if (e.code === 'Space' && this.currentSession) {
+                e.preventDefault();
+                const exitOverlay = document.getElementById('exit-overlay');
+                const goalOverlay = document.getElementById('goal-reached-overlay');
+
+                if (!exitOverlay.classList.contains('hidden')) {
+                    // Resume from pause
+                    this.currentSession.resume();
+                } else if (goalOverlay.classList.contains('hidden') && this.currentSession.active) {
+                    // Pause
+                    this.currentSession.pause();
+                }
+            }
+
+            // Escape to go back / close modals
+            if (e.code === 'Escape') {
+                const customOverlay = document.getElementById('custom-time-overlay');
+                const goalOverlay = document.getElementById('level-goal-overlay');
+
+                if (!customOverlay.classList.contains('hidden')) {
+                    this.closeCustomTimeModal();
+                } else if (!goalOverlay.classList.contains('hidden')) {
+                    this.closeLevelGoalModal();
+                } else {
+                    // Navigate back
+                    const activeView = document.querySelector('.view.active');
+                    if (activeView) {
+                        if (activeView.id === 'view-instruction') {
+                            this.view.show('dashboard');
+                        } else if (activeView.id === 'view-debrief') {
+                            this.view.show('dashboard');
+                        }
+                    }
+                }
+            }
+        });
     }
 
     setupCustomConfig() {
         const grid = document.getElementById('shape-picker-grid');
         const config = this.store.state.customConfig;
 
-        // Populate Shapes
         Object.entries(SHAPES).forEach(([key, val]) => {
             const btn = document.createElement('div');
             btn.classList.add('shape-btn');
             if (config.shape === key) btn.classList.add('selected');
             btn.title = val.name;
-
-            // Render preview icon (small SVG)
             const icon = this.getSVG(key, 40, 2);
-            // Normalize icon size/stroke for button?
             btn.appendChild(icon);
 
             btn.addEventListener('click', () => {
                 this.store.state.customConfig.shape = key;
                 this.store.save();
-
-                // UI Update
                 grid.querySelectorAll('.shape-btn').forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
             });
@@ -505,7 +634,6 @@ class App {
             grid.appendChild(btn);
         });
 
-        // Bind Animations
         const bindAnim = (id, key) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -520,7 +648,6 @@ class App {
         bindAnim('anim-bounce', 'bounce');
         bindAnim('anim-rotate', 'rotate');
     }
-
 
     setupCustomTimeModal() {
         this.customTimeOverlay = document.getElementById('custom-time-overlay');
@@ -543,12 +670,10 @@ class App {
             this.closeCustomTimeModal();
         });
 
-        // Close on overlay click
         this.customTimeOverlay.addEventListener('click', (e) => {
             if (e.target === this.customTimeOverlay) this.closeCustomTimeModal();
         });
 
-        // Handle Enter key
         this.customMinutesInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 this.btnConfirm.click();
@@ -569,21 +694,14 @@ class App {
     }
 
     setupGoalModals() {
-        // Level Goal Modal
         this.levelGoalOverlay = document.getElementById('level-goal-overlay');
-        // Session Goal Inputs
         this.levelSessionGoalInput = document.getElementById('level-session-goal-minutes');
         this.levelSessionGoalEnabled = document.getElementById('level-session-goal-enabled');
-
-        // Practice Goal Inputs
         this.levelPracticeGoalEnabled = document.getElementById('level-practice-goal-enabled');
         this.levelPracticeGoalHours = document.getElementById('level-practice-goal-hours');
         this.levelPracticeGoalMinutes = document.getElementById('level-practice-goal-minutes');
-
-        // Adjust Inputs
         this.levelAdjustHours = document.getElementById('level-adjust-hours');
         this.levelAdjustMinutes = document.getElementById('level-adjust-minutes');
-
         this.levelGoalTitle = document.getElementById('level-goal-title');
         this.pendingGoalLevelId = null;
 
@@ -597,18 +715,12 @@ class App {
 
         document.getElementById('btn-level-goal-save').addEventListener('click', () => {
             if (this.pendingGoalLevelId) {
-                // Save Session Goal
                 const sessionMinutes = parseInt(this.levelSessionGoalInput.value) || 5;
                 this.store.state.levelGoals[this.pendingGoalLevelId].targetMinutes = Math.max(1, sessionMinutes);
                 this.store.state.levelGoals[this.pendingGoalLevelId].enabled = this.levelSessionGoalEnabled.checked;
 
-                // Save Practice Goal
                 const practiceHours = parseInt(this.levelPracticeGoalHours.value) || 0;
                 const practiceMinutes = parseInt(this.levelPracticeGoalMinutes.value) || 0;
-                // Convert to floating point hours for storage or just store hours? 
-                // Let's store totalTargetHours as a float if needed, but UI shows hours.
-                // Simple approach: Store totalTargetHours. 
-                // We'll treat the input as: Hours + (Minutes/60)
                 const totalTargetHours = practiceHours + (practiceMinutes / 60);
                 this.store.state.levelGoals[this.pendingGoalLevelId].totalTargetHours = Math.max(0.1, totalTargetHours);
                 this.store.state.levelGoals[this.pendingGoalLevelId].totalEnabled = this.levelPracticeGoalEnabled.checked;
@@ -623,7 +735,6 @@ class App {
             this.closeLevelGoalModal();
         });
 
-        // Time Adjustment Handlers within Modal
         const handleLevelTimeAdjust = (isAdd) => {
             if (!this.pendingGoalLevelId) return;
             const hours = parseInt(this.levelAdjustHours.value) || 0;
@@ -632,11 +743,8 @@ class App {
             if (totalMinutes === 0) return;
 
             const adjustAmount = isAdd ? totalMinutes : -totalMinutes;
-
             if (this.store.adjustTime(this.pendingGoalLevelId, adjustAmount)) {
-                // Update the modal UI immediately to show new total
                 this.updateLevelGoalModalProgress();
-                // Reset inputs
                 this.levelAdjustHours.value = 0;
                 this.levelAdjustMinutes.value = 0;
             }
@@ -660,7 +768,6 @@ class App {
             } else {
                 sessionGoalInputWrap.classList.add('hidden');
             }
-            // Update level goal settings
             if (this.selectedLevelId) {
                 this.store.state.levelGoals[this.selectedLevelId].enabled = sessionGoalEnabled.checked;
                 this.store.state.levelGoals[this.selectedLevelId].targetMinutes = parseInt(sessionGoalMinutes.value) || 5;
@@ -691,11 +798,9 @@ class App {
         const level = LEVELS[levelId];
         this.levelGoalTitle.innerText = `${level.name.toUpperCase()} SETTINGS`;
 
-        // Session Goal
         this.levelSessionGoalInput.value = goal.targetMinutes;
         this.levelSessionGoalEnabled.checked = goal.enabled;
 
-        // Practice Goal
         const totalTarget = goal.totalTargetHours || 10;
         const practiceGoalMajor = Math.floor(totalTarget);
         const practiceGoalMinor = Math.round((totalTarget - practiceGoalMajor) * 60);
@@ -704,13 +809,10 @@ class App {
         this.levelPracticeGoalMinutes.value = practiceGoalMinor;
         this.levelPracticeGoalEnabled.checked = goal.totalEnabled || false;
 
-        // Reset Adjust Inputs
         this.levelAdjustHours.value = 0;
         this.levelAdjustMinutes.value = 0;
 
-        // Update Progress UI
         this.updateLevelGoalModalProgress();
-
         this.levelGoalOverlay.classList.remove('hidden');
     }
 
@@ -720,22 +822,18 @@ class App {
         const data = this.store.state.levelData[levelId];
         const goal = this.store.state.levelGoals[levelId];
 
-        // Calculate current time
         const currentSeconds = data.time || 0;
         const currentHours = Math.floor(currentSeconds / 3600);
         const currentRemainingMinutes = Math.floor((currentSeconds % 3600) / 60);
 
-        // Update Text
         document.getElementById('level-current-total').innerText = `${currentHours}h ${currentRemainingMinutes}m`;
         document.getElementById('level-practice-current').innerText = `${currentHours}h ${currentRemainingMinutes}m`;
 
         const targetHours = goal.totalTargetHours || 10;
-        // Format target for display (e.g. 10.5 -> 10h 30m)
         const tMajor = Math.floor(targetHours);
         const tMinor = Math.round((targetHours - tMajor) * 60);
         document.getElementById('level-practice-target').innerText = `${tMajor}h ${tMinor}m`;
 
-        // Update Progress Bar
         const progressFill = document.getElementById('level-practice-progress-fill');
         const targetSeconds = targetHours * 3600;
         if (targetSeconds > 0) {
@@ -749,44 +847,82 @@ class App {
     closeLevelGoalModal() {
         this.levelGoalOverlay.classList.add('hidden');
         this.pendingGoalLevelId = null;
-        this.renderDashboard(); // Re-render to update dashboard stats if changed via adjust
+        this.renderDashboard();
     }
 
+    // --- Theme Toggle (3-state cycle) ---
     setupThemeToggle() {
         const btn = document.getElementById('theme-toggle');
+        const label = document.getElementById('theme-label');
         if (!btn) return;
 
-        const sunIcon = btn.querySelector('.sun-icon');
-        const moonIcon = btn.querySelector('.moon-icon');
+        const THEME_NAMES = { dark: 'DARK', light: 'LIGHT', ink: 'INK & PAPER' };
+        let labelTimer = null;
 
-        const applyTheme = (theme) => {
-            document.body.classList.toggle('light-theme', theme === 'light');
-            if (theme === 'light') {
-                if (!document.getElementById('__inv')) {
-                    document.getElementById('app').insertAdjacentHTML(
-                        'beforeend',
-                        '<div id="__inv" style="position:absolute;inset:0;pointer-events:none;backdrop-filter:invert(1) hue-rotate(180deg);z-index:9999"></div>'
-                    );
-                }
-                sunIcon.style.display = 'none';
-                moonIcon.style.display = 'block';
-            } else {
-                const inv = document.getElementById('__inv');
-                if (inv) inv.remove();
-                sunIcon.style.display = 'block';
-                moonIcon.style.display = 'none';
-            }
+        const flashLabel = (theme) => {
+            if (!label) return;
+            label.textContent = THEME_NAMES[theme] || theme.toUpperCase();
+            label.classList.add('show');
+            clearTimeout(labelTimer);
+            labelTimer = setTimeout(() => label.classList.remove('show'), 1500);
         };
 
-        // Initial apply
-        applyTheme(this.store.state.theme || 'dark');
+        const applyTheme = (theme, animate = false) => {
+            // Remove all theme classes
+            document.body.classList.remove('theme-light', 'theme-ink');
+
+            // Remove old invert div if present (migration from old code)
+            const inv = document.getElementById('__inv');
+            if (inv) inv.remove();
+
+            // Apply new theme class
+            if (theme === 'light') {
+                document.body.classList.add('theme-light');
+            } else if (theme === 'ink') {
+                document.body.classList.add('theme-ink');
+            }
+            // 'dark' = no class needed (default)
+
+            // Update toggle icon with rotation
+            btn.querySelectorAll('.theme-icon').forEach(i => i.classList.remove('active'));
+            const activeIcon = btn.querySelector(`.icon-${theme}`);
+            if (activeIcon) activeIcon.classList.add('active');
+
+            if (animate) {
+                // Spin the icon briefly
+                const svg = activeIcon;
+                if (svg) {
+                    svg.style.transform = 'rotate(180deg)';
+                    requestAnimationFrame(() => {
+                        setTimeout(() => { svg.style.transform = 'rotate(0deg)'; }, 50);
+                    });
+                }
+                flashLabel(theme);
+            }
+
+            // Re-render dashboard to update SVG colors
+            this.renderDashboard();
+        };
+
+        // Initial apply (no animation)
+        const currentTheme = this.store.state.theme || 'dark';
+        applyTheme(currentTheme, false);
 
         btn.addEventListener('click', () => {
-            const currentTheme = this.store.state.theme === 'light' ? 'dark' : 'light';
-            this.store.state.theme = currentTheme;
+            const currentIdx = THEMES.indexOf(this.store.state.theme || 'dark');
+            const nextTheme = THEMES[(currentIdx + 1) % THEMES.length];
+            this.store.state.theme = nextTheme;
             this.store.save();
-            applyTheme(currentTheme);
+            applyTheme(nextTheme, true);
         });
+    }
+
+    // Get current shape color based on theme
+    getShapeColor() {
+        const theme = this.store.state.theme || 'dark';
+        if (theme === 'light') return '#101828';  // cool dark for light theme
+        if (theme === 'ink') return '#2c2416';     // warm dark for ink theme
+        return '#ffffff';  // white for dark theme
     }
 
     bindEvents() {
@@ -814,7 +950,7 @@ class App {
                         this.store.state.sigilImage = event.target.result;
                         this.store.save();
                         this.updateSigilPreview();
-                        this.renderDashboard(); // refresh card icon
+                        this.renderDashboard();
                     };
                     reader.readAsDataURL(file);
                 }
@@ -866,7 +1002,7 @@ class App {
         // Manual Adjustment Buttons
         document.querySelectorAll('.btn-adjust').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent level card click
+                e.stopPropagation();
                 const levelId = parseInt(btn.dataset.level);
                 let minutes = 0;
 
@@ -876,7 +1012,7 @@ class App {
                     minutes = -1;
                 } else if (btn.classList.contains('btn-custom')) {
                     this.showCustomTimeModal(levelId);
-                    return; // Modal handles the rest
+                    return;
                 }
 
                 if (this.store.adjustTime(levelId, minutes)) {
@@ -906,9 +1042,20 @@ class App {
                     } else {
                         alert("Failed to import data. Invalid format.");
                     }
-                    importInput.value = ''; // Reset for next time
+                    importInput.value = '';
                 };
                 reader.readAsText(file);
+            }
+        });
+
+        // Reset Data
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
+                if (confirm('This will permanently erase all sessions, goals, and settings. Continue?')) {
+                    this.store.resetData();
+                    this.renderDashboard();
+                    alert('All data has been reset.');
+                }
             }
         });
     }
@@ -937,22 +1084,18 @@ class App {
         const customConfigView = document.getElementById('custom-config-view');
         const masteryInfo = document.getElementById('mastery-info');
 
-        // Reset
         p1.innerText = ''; p2.innerText = ''; p3.innerText = '';
         masteryInfo.classList.add('hidden');
         uploadView.classList.add('hidden');
         if (customConfigView) customConfigView.classList.add('hidden');
 
-        // Populate steps
         if (level.steps[0]) p1.innerText = level.steps[0];
         if (level.steps[1]) p2.innerText = level.steps[1];
         if (level.steps[2]) p3.innerText = level.steps[2];
 
-        // Level Specific Views
         if (levelId === 5) {
             uploadView.classList.remove('hidden');
             this.updateSigilPreview();
-            // Prefix with the 'extra' foundation text
             p1.innerText = level.extra;
             p2.innerText = level.steps[0] + " " + level.steps[1];
             p3.innerText = level.steps[2] + " " + level.steps[3];
@@ -960,7 +1103,7 @@ class App {
             if (customConfigView) customConfigView.classList.remove('hidden');
             p2.innerText = level.steps[1] + " " + level.steps[2];
         } else {
-            masteryInfo.classList.remove('hidden'); // Show mastery criteria for preparatory levels
+            masteryInfo.classList.remove('hidden');
         }
 
         // Populate session goal settings
@@ -988,10 +1131,9 @@ class App {
             this.selectedLevelId,
             (duration) => this.handleSessionComplete(duration),
             () => { },
-            () => { } // onGoalReached - no special handling needed, UI handles it
+            () => { }
         );
 
-        // Set goal if enabled for this level
         const goal = this.store.state.levelGoals[this.selectedLevelId];
         if (goal.enabled) {
             this.currentSession.setGoal(goal.targetMinutes);
@@ -1006,7 +1148,6 @@ class App {
 
         const lvlData = this.store.state.levelData[this.selectedLevelId];
 
-        // Update Session Summary UI
         const formatTime = (s) => {
             const m = Math.floor(s / 60);
             const rs = s % 60;
@@ -1016,7 +1157,20 @@ class App {
         document.getElementById('session-time-val').innerText = formatTime(duration);
         document.getElementById('cumulative-time-val').innerText = `${Math.floor(lvlData.time / 60)}m`;
 
-        // Mastery Check Logic
+        // Motivational message
+        const motMsg = MOTIVATIONAL_MESSAGES[Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length)];
+        document.getElementById('debrief-motivation').innerText = `"${motMsg}"`;
+
+        // Streak
+        const streak = this.store.getStreak();
+        const streakEl = document.getElementById('debrief-streak');
+        if (streak > 0) {
+            streakEl.innerText = `🔥 ${streak} day${streak > 1 ? 's' : ''} streak`;
+        } else {
+            streakEl.innerText = '';
+        }
+
+        // Mastery Check
         const minTimeForMastery = LEVELS[this.selectedLevelId].duration * 3;
         const masteryDiv = document.getElementById('mastery-check');
         const normalDiv = document.getElementById('normal-debrief');
@@ -1032,7 +1186,20 @@ class App {
         this.view.show('debrief');
     }
 
-
+    // --- Helper: relative time ("2h ago", "3d ago") ---
+    timeAgo(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'just now';
+        if (diffMin < 60) return `${diffMin}m ago`;
+        const diffHrs = Math.floor(diffMin / 60);
+        if (diffHrs < 24) return `${diffHrs}h ago`;
+        const diffDays = Math.floor(diffHrs / 24);
+        if (diffDays < 7) return `${diffDays}d ago`;
+        const diffWeeks = Math.floor(diffDays / 7);
+        return `${diffWeeks}w ago`;
+    }
 
     renderDashboard() {
         const totalSec = this.store.state.totalTime || 0;
@@ -1040,42 +1207,106 @@ class App {
         const mins = Math.floor((totalSec % 3600) / 60);
         document.getElementById('total-time-display').innerText = `${hrs}h ${mins}m`;
 
+        // Streak
+        const streak = this.store.getStreak();
+        const streakCount = document.getElementById('streak-count');
+        if (streakCount) streakCount.innerText = streak;
 
+        // Total sessions count
+        let totalSessionCount = 0;
 
         const allSessions = [];
+        const RING_CIRCUMFERENCE = 2 * Math.PI * 35; // r=35
 
         document.querySelectorAll('.level-card').forEach(card => {
             const lid = parseInt(card.dataset.level);
             const data = this.store.state.levelData[lid];
             const levelGoal = this.store.state.levelGoals[lid];
 
-            // All levels unlocked
             card.classList.remove('locked');
+
+            // Mastery badge
+            if (data.mastered) {
+                card.classList.add('mastered');
+            } else {
+                card.classList.remove('mastered');
+            }
 
             const lMin = Math.floor(data.time / 60);
             const history = data.history || [];
-            const timeDisplay = card.querySelector('.level-time');
-            if (timeDisplay) timeDisplay.innerText = `Sessions: ${history.length} | Total: ${lMin}m`;
+            totalSessionCount += history.filter(s => !s.manual).length;
 
-            // Show goal status on card
+            const timeDisplay = card.querySelector(`[data-time="${lid}"]`);
+            if (timeDisplay) {
+                const sessionCount = history.filter(s => !s.manual).length;
+                const displayTime = lMin >= 60 ? `${Math.floor(lMin / 60)}h ${lMin % 60}m` : `${lMin}m`;
+                timeDisplay.innerText = `Sessions: ${sessionCount} | Total: ${displayTime}`;
+            }
+
+            // Last practiced badge
+            const lastPracticedEl = card.querySelector(`[data-last="${lid}"]`);
+            if (lastPracticedEl) {
+                const realSessions = history.filter(s => !s.manual);
+                if (realSessions.length > 0) {
+                    const lastDate = new Date(realSessions[realSessions.length - 1].date);
+                    lastPracticedEl.textContent = `Last: ${this.timeAgo(lastDate)}`;
+                    lastPracticedEl.classList.remove('hidden');
+                } else {
+                    lastPracticedEl.classList.add('hidden');
+                }
+            }
+
+            // Progress Ring
+            const ring = card.querySelector(`[data-ring="${lid}"]`);
+            if (ring && levelGoal.totalEnabled) {
+                const targetSeconds = (levelGoal.totalTargetHours || 10) * 3600;
+                const pct = targetSeconds > 0 ? Math.min(1, data.time / targetSeconds) : 0;
+                const dashOffset = RING_CIRCUMFERENCE * (1 - pct);
+                ring.setAttribute('stroke-dasharray', RING_CIRCUMFERENCE);
+                ring.setAttribute('stroke-dashoffset', dashOffset);
+            } else if (ring) {
+                ring.setAttribute('stroke-dasharray', RING_CIRCUMFERENCE);
+                ring.setAttribute('stroke-dashoffset', RING_CIRCUMFERENCE);
+            }
+
+            // Card-Level Progress Bar
+            const progressWrap = card.querySelector(`[data-progress="${lid}"]`);
+            if (progressWrap) {
+                if (levelGoal.totalEnabled) {
+                    progressWrap.classList.remove('hidden');
+                    const targetHours = levelGoal.totalTargetHours || 10;
+                    const targetSeconds = targetHours * 3600;
+                    const pct = targetSeconds > 0 ? Math.min(100, (data.time / targetSeconds) * 100) : 0;
+                    const fill = progressWrap.querySelector(`[data-fill="${lid}"]`);
+                    if (fill) fill.style.width = `${pct}%`;
+
+                    const currentH = Math.floor(data.time / 3600);
+                    const currentM = Math.floor((data.time % 3600) / 60);
+                    const targetDisplay = targetHours >= 1 ? `${Math.floor(targetHours)}h` : `${Math.round(targetHours * 60)}m`;
+                    const currentDisplay = currentH > 0 ? `${currentH}h ${currentM}m` : `${currentM}m`;
+
+                    const plabel = progressWrap.querySelector(`[data-plabel="${lid}"]`);
+                    if (plabel) plabel.textContent = `${currentDisplay} / ${targetDisplay}`;
+                    const ppct = progressWrap.querySelector(`[data-ppct="${lid}"]`);
+                    if (ppct) ppct.textContent = `${Math.round(pct)}%`;
+                } else {
+                    progressWrap.classList.add('hidden');
+                }
+            }
+
+            // Goal status badges
             const goalStatus = card.querySelector('[data-goal-status]');
             if (goalStatus) {
                 let statusHtml = '';
-
-                // Practice Goal Status
                 if (levelGoal.totalEnabled) {
                     const targetHours = levelGoal.totalTargetHours || 10;
                     const lHours = Math.floor(lMin / 60);
-                    // Use a shorter format if space is tight
                     statusHtml += `<span class="status-item practice">🏆 ${lHours}h/${targetHours}h</span>`;
                 }
-
-                // Session Goal Status
                 if (levelGoal.enabled) {
                     if (statusHtml) statusHtml += ' <span class="separator">|</span> ';
                     statusHtml += `<span class="status-item session">🎯 ${levelGoal.targetMinutes}m</span>`;
                 }
-
                 if (statusHtml) {
                     goalStatus.classList.remove('hidden');
                     goalStatus.innerHTML = statusHtml;
@@ -1084,7 +1315,7 @@ class App {
                 }
             }
 
-            // Aggregation for global log
+            // Sessions for global log
             history.forEach(session => {
                 allSessions.push({
                     levelName: LEVELS[lid].name.toUpperCase(),
@@ -1096,7 +1327,10 @@ class App {
 
             // Render Icon
             const iconWrap = card.querySelector('.level-icon');
+            const existingRing = iconWrap.querySelector('.progress-ring-wrap');
             iconWrap.innerHTML = '';
+            if (existingRing) iconWrap.appendChild(existingRing);
+
             if (lid === 5 && this.store.state.sigilImage) {
                 const img = document.createElement('img');
                 img.src = this.store.state.sigilImage;
@@ -1106,16 +1340,21 @@ class App {
             }
         });
 
-        // Sort sessions by date (newest first)
+        // Total sessions display
+        const totalSessionsEl = document.getElementById('total-sessions-display');
+        if (totalSessionsEl) totalSessionsEl.innerText = totalSessionCount;
+
+        // Sort sessions newest first
         allSessions.sort((a, b) => b.date - a.date);
 
-        // Update Global Log UI
+        // Update Log
         const logList = document.getElementById('log-list');
         const lastSessionDisplay = document.getElementById('last-session-display');
 
         if (allSessions.length > 0) {
             logList.innerHTML = '';
-            lastSessionDisplay.innerText = allSessions[0].levelName;
+            // Show relative time for last session
+            lastSessionDisplay.innerText = this.timeAgo(allSessions[0].date);
 
             allSessions.forEach(session => {
                 const entry = document.createElement('div');
@@ -1139,6 +1378,8 @@ class App {
                 `;
                 logList.appendChild(entry);
             });
+        } else {
+            logList.innerHTML = '<div class="log-empty"><div class="log-empty-icon">◎</div><p>No sessions recorded yet. Select a level to begin.</p></div>';
         }
     }
 
@@ -1158,32 +1399,27 @@ class App {
             const config = this.store.state.customConfig;
             const size = 400;
             const ns = "http://www.w3.org/2000/svg";
+            const color = this.getShapeColor();
 
-            // 6. Custom Practice: Separated Dot and Shape
             const svg = document.createElementNS(ns, "svg");
             svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
 
-            // Get form element (without dot)
-            // Note: getSVG(type, size, stroke, false) returns SVG with just the form
             const tempSvg = this.getSVG(config.shape, size, 3, false);
             const formNode = tempSvg.firstElementChild;
 
             if (formNode) {
-                // Create Animation Hierarchy (Inner -> Outer)
                 const anims = config.animations;
                 let content = formNode;
 
                 const wrap = (cls) => {
                     const g = document.createElementNS(ns, "g");
                     g.classList.add(cls);
-                    // Fix transform origin for SVG elements
                     g.style.transformOrigin = "center";
                     g.style.transformBox = "view-box";
                     g.appendChild(content);
                     content = g;
                 };
 
-                // Apply animations
                 if (anims.blink) wrap('anim-wrapper-blink');
                 if (anims.bounce) wrap('anim-wrapper-bounce');
                 if (anims.rotate) wrap('anim-wrapper-rotate');
@@ -1191,16 +1427,17 @@ class App {
                 svg.appendChild(content);
             }
 
-            // Static Dot (On Top)
+            // Static Dot on top
             const dot = document.createElementNS(ns, "circle");
             const c = size / 2;
             dot.setAttribute("cx", c); dot.setAttribute("cy", c);
             dot.setAttribute("r", size * 0.02);
-            dot.setAttribute("fill", "white");
+            dot.setAttribute("fill", color);
             svg.appendChild(dot);
 
             shapeWrap.appendChild(svg);
         } else {
+            // Use practice-specific larger SVG
             shapeWrap.appendChild(this.getSVG(levelId, 400, 3));
         }
 
@@ -1213,15 +1450,7 @@ class App {
         svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
 
         const center = size / 2;
-        const color = "white";
-
-        // Dot (Always present for standard levels, what about custom? Steps say "focus object")
-        // Level 6 implies "Custom Practice" -> "The Form". 
-        // Let's include the dot if it's not a purely filled shape or if user expects it.
-        // Standard forms (1-4) have a dot. Custom forms usually surround a dot or ARE the object.
-        // Steps say "Select a shape... Focus on the dot within?" or "Select a shape that resonates".
-        // Let's assume there's a dot for consistency unless the shape IS the focus.
-        // I will add a dot for all linear shapes.
+        const color = this.getShapeColor();
 
         const dot = document.createElementNS(ns, "circle");
         dot.setAttribute("cx", center);
@@ -1231,11 +1460,9 @@ class App {
 
         let form = null;
 
-        // Helper for Regular Polygons
         const createPoly = (sides, r) => {
             let pts = [];
             for (let i = 0; i < sides; i++) {
-                // -PI/2 to start at top
                 const th = (Math.PI * 2 * i / sides) - Math.PI / 2;
                 pts.push(`${center + r * Math.cos(th)},${center + r * Math.sin(th)}`);
             }
@@ -1243,25 +1470,22 @@ class App {
         };
 
         if (type === 1) { /* Dot only */ }
-        else if (type === 2) { // Circle
+        else if (type === 2) {
             form = document.createElementNS(ns, "circle");
             form.setAttribute("cx", center); form.setAttribute("cy", center);
             form.setAttribute("r", size * 0.4);
         }
-        else if (type === 3) { // Square
+        else if (type === 3) {
             const s = size * 0.7;
             form = document.createElementNS(ns, "rect");
             form.setAttribute("x", center - s / 2); form.setAttribute("y", center - s / 2);
             form.setAttribute("width", s); form.setAttribute("height", s);
         }
-        else if (type === 4) { // Triangle
+        else if (type === 4) {
             const r = size * 0.45;
-            // 3 sides
-            const pts = createPoly(3, r);
             form = document.createElementNS(ns, "polygon");
-            form.setAttribute("points", pts);
+            form.setAttribute("points", createPoly(3, r));
         }
-        // Custom Shapes
         else if (type === 'hexagon') {
             form = document.createElementNS(ns, "polygon");
             form.setAttribute("points", createPoly(6, size * 0.4));
@@ -1275,10 +1499,8 @@ class App {
             form.setAttribute("points", createPoly(8, size * 0.4));
         }
         else if (type === 'diamond') {
-            // Rhombus: Rect rotated 45deg or polygon
             form = document.createElementNS(ns, "polygon");
             const r = size * 0.4;
-            // top, right, bottom, left
             form.setAttribute("points", `${center},${center - r} ${center + r * 0.7},${center} ${center},${center + r} ${center - r * 0.7},${center}`);
         }
         else if (type === 'star') {
@@ -1297,36 +1519,19 @@ class App {
             form = document.createElementNS(ns, "path");
             const L = size * 0.4;
             const T = size * 0.12;
-            // Draw cross path
             form.setAttribute("d", `M${center - T},${center - L} H${center + T} V${center - T} H${center + L} V${center + T} H${center + T} V${center + L} H${center - T} V${center + T} H${center - L} V${center - T} H${center - T} Z`);
         }
         else if (type === 'crescent') {
             form = document.createElementNS(ns, "path");
             const r = size * 0.35;
-            // Circle minus offset circle
             form.setAttribute("d", `M${center + r * 0.5},${center - r * 0.8} A${r},${r} 0 1,1 ${center + r * 0.5},${center + r * 0.8} A${r * 1.2},${r * 1.2} 0 1,0 ${center + r * 0.5},${center - r * 0.8} Z`);
         }
         else if (type === 'heart') {
             form = document.createElementNS(ns, "path");
-            const s = size * 0.012; // scale factor
-            // simple heart path centered roughly
-            // M 10,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 90,30 Q 90,60 50,90 Q 10,60 10,30 Z
-            // Need to translate/scale to center
-            const path = "M 25,30 A 20,20 0,0,1 50,30 A 20,20 0,0,1 75,30 Q 75,60 50,85 Q 25,60 25,30 Z";
-            // Better to generate points or use a standard path string normalized to size
-            // Using a simpler approximator logic
-            form.setAttribute("d", `M${center},${center + size * 0.25} C${center},${center - size * 0.1} ${center - size * 0.5},${center - size * 0.3} ${center - size * 0.35},${center - size * 0.2} C${center - size * 0.1},${center - size * 0.05} ${center - size * 0.1},${center + size * 0.1} ${center},${center + size * 0.35} C${center + size * 0.1},${center + size * 0.1} ${center + size * 0.1},${center - size * 0.05} ${center + size * 0.35},${center - size * 0.2} C${center + size * 0.5},${center - size * 0.3} ${center},${center - size * 0.1} ${center},${center + size * 0.25} Z`);
-            // Actually, standard Bezier heart:
-            form.setAttribute("d", `M${center},${center + size * 0.15} C${center},${center - size * 0.1} ${center - size * 0.45},${center - size * 0.3} ${center - size * 0.45},${center - size * 0.1} C${center - size * 0.45},${center + size * 0.1} ${center - size * 0.2},${center + size * 0.25} ${center},${center + size * 0.4} C${center + size * 0.2},${center + size * 0.25} ${center + size * 0.45},${center + size * 0.1} ${center + size * 0.45},${center - size * 0.1} C${center + size * 0.45},${center - size * 0.3} ${center},${center - size * 0.1} ${center},${center + size * 0.15} Z`);
-            // Inverting Y for SVG coords? No, SVG Y+ is down. 
-            // Start at bottom tip?
-            // M center, bottom
-            // Let's use a standard path
             form.setAttribute("d", `M${center},${center + size * 0.35} C${center - size * 0.4},${center - size * 0.15} ${center - size * 0.4},${center - size * 0.45} ${center},${center - size * 0.25} C${center + size * 0.4},${center - size * 0.45} ${center + size * 0.4},${center - size * 0.15} ${center},${center + size * 0.35}`);
         }
         else if (type === 'ruby') {
             form = document.createElementNS(ns, "polygon");
-            // Trapezoid top, triangle bot
             const w = size * 0.35;
             const h1 = size * 0.15;
             const h2 = size * 0.35;
